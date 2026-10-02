@@ -152,12 +152,10 @@ async function login(page, admin = false) {
             ]);
             const orderURL = page.url();
             await inspect(page, `${device}-payment`);
-            let gatewayURL;
             // Stub only the bank page. No request to a real merchant or bank is made.
             await context.route(
                 "https://sandbox.vnpayment.vn/**",
                 async (route) => {
-                    gatewayURL = route.request().url();
                     await route.fulfill({
                         contentType: "text/html",
                         body: '<html lang="vi"><title>Test gateway</title><h1>VNPay sandbox stub</h1></html>',
@@ -168,14 +166,21 @@ async function login(page, admin = false) {
                 page.waitForURL("https://sandbox.vnpayment.vn/**"),
                 page.locator(".payment-start-form button").click(),
             ]);
-            assert(gatewayURL, "Payment redirect was blocked or missing");
+            // Read the document URL: a later favicon request must not replace it.
+            const gatewayURL = page.url();
+            const provider = new URL(gatewayURL).searchParams;
+            assert.equal(provider.get("vnp_TmnCode"), "TEST1234");
+            assert.match(provider.get("vnp_TxnRef"), /^[A-F0-9]{32}$/);
+            assert.equal(
+                Number(provider.get("vnp_Amount")),
+                expectedPrice * 100,
+            );
             await page.goBack();
             await page.locator(".payment-start-form button").waitFor();
             assert(
                 await page.locator(".payment-start-form button").isEnabled(),
                 "Back from VNPay left checkout disabled",
             );
-            const provider = new URL(gatewayURL).searchParams;
             const callback = {
                 vnp_Amount: provider.get("vnp_Amount"),
                 vnp_TmnCode: provider.get("vnp_TmnCode"),
