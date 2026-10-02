@@ -1609,6 +1609,7 @@ td form {
     gap: 9px;
 }
 .checkout-steps span {
+    color: #596576;
     width: 28px;
     height: 28px;
     border-radius: 50%;

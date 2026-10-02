@@ -61,11 +61,6 @@ async function inspect(page, name) {
         "test-results/ui-report.json",
         JSON.stringify(results, null, 2),
     );
-    assert.equal(
-        violations.length,
-        0,
-        `${name}: ${JSON.stringify(violations)}`,
-    );
 }
 
 async function login(page, admin = false) {
@@ -128,9 +123,27 @@ async function login(page, admin = false) {
                 .locator(".seat-choice:has(input:not(:disabled))")
                 .first();
             await seat.click();
-            assert.notEqual(
-                await page.locator("[data-total]").textContent(),
-                "0 ₫",
+            assert(
+                await seat.locator("input").isChecked(),
+                "Seat selection did not update checkbox",
+            );
+            const expectedPrice =
+                Number(
+                    await page
+                        .locator("[data-booking-form]")
+                        .getAttribute("data-base-price"),
+                ) +
+                Number(await seat.locator("input").getAttribute("data-extra"));
+            const displayedPrice = Number(
+                (await page.locator("[data-total]").textContent()).replace(
+                    /[^0-9]/g,
+                    "",
+                ),
+            );
+            assert.equal(
+                displayedPrice,
+                expectedPrice,
+                "Client summary does not match selected seat price",
             );
             await page.locator('[name="method"]').selectOption("vnpay");
             await Promise.all([
@@ -230,6 +243,8 @@ async function login(page, admin = false) {
             assert.deepEqual(errors, [], `${device}: browser errors`);
             await context.close();
         }
+        const failures = results.filter((result) => result.violations.length);
+        assert.equal(failures.length, 0, JSON.stringify(failures));
         console.log(
             `PASS UI: ${results.length} desktop/mobile pages, checkout, stubbed VNPay/IPN, archive, navigation, accessibility, no browser errors.`,
         );
