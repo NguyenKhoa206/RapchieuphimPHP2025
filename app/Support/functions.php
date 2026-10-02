@@ -46,6 +46,11 @@ function redirect(string $path, array $query = []): never
     exit;
 }
 
+function asset_url(string $path): string
+{
+    return url($path, ['v' => (string) filemtime(APP_ROOT . '/public/' . $path)]);
+}
+
 function flash(string $message, string $type = 'success'): void
 {
     $_SESSION['flash'][] = ['message' => $message, 'type' => $type];

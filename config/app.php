@@ -15,5 +15,15 @@ return [
     ],
     'booking_minutes' => 15,
     'allow_demo_payment' => getenv('ALLOW_DEMO_PAYMENT') === '1',
+    'payments' => [
+        'vnpay' => [
+            'enabled' => getenv('VNPAY_ENABLED') === '1',
+            'environment' => getenv('VNPAY_ENVIRONMENT') ?: 'sandbox',
+            'tmn_code' => getenv('VNPAY_TMN_CODE') ?: '',
+            'hash_secret' => getenv('VNPAY_HASH_SECRET') ?: '',
+            // Explicit URL avoids building payment callbacks from an untrusted Host header.
+            'return_url' => getenv('VNPAY_RETURN_URL') ?: '',
+        ],
+    ],
     'upload_limit' => 25 * 1024 * 1024,
 ];

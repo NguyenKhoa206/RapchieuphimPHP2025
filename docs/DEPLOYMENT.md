@@ -26,4 +26,6 @@ Với Nginx/PHP-FPM, đặt `root /var/www/cinema/public`, chỉ chuyển file P
 - Dùng múi giờ `Asia/Ho_Chi_Minh`; kết nối MySQL đặt timezone `+07:00` để hết hạn/giờ chiếu khớp PHP.
 - Mặc định `allow_demo_payment=false`. Xác nhận tại quầy trong `/admin/orders.php`; khi triển khai thật cần đối chiếu tiền đã thu trước khi bấm xác nhận.
 
-Ứng dụng chưa có cổng thanh toán, webhook, hoàn tiền, gửi email/SMS hay kiểm vé QR. Muốn thêm cổng thật cần cấu hình nhà cung cấp và xác minh callback ở máy chủ; không dùng nút demo như chứng từ thu tiền.
+VNPay có redirect/ReturnURL/IPN xác minh tại máy chủ; xem [cấu hình thanh toán](PAYMENTS.md). Cần merchant và URL HTTPS truy cập được trước khi bật cổng. Ứng dụng chưa tự hoàn tiền, truy vấn giao dịch thất lạc, gửi email/SMS hay kiểm vé QR. Các khoản cần đối soát được ghi nhận riêng để xử lý theo quy trình của rạp. Không dùng demo/Sandbox như chứng từ thu tiền.
+
+Khi nâng cấp từ nhánh đã cấu trúc trước, chạy lại `php scripts/install.php` để tạo bảng thanh toán và lịch sử mới. Không chạy seed hoặc migrate danh mục lại trên CSDL có dữ liệu. Các URL giao diện giữ nguyên; tài nguyên CSS/JS có version để cập nhật cache sau triển khai.

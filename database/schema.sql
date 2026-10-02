@@ -129,3 +129,80 @@ CREATE TABLE IF NOT EXISTS cinema_reservations (
     FOREIGN KEY (seat_id) REFERENCES cinema_seats(id),
     FOREIGN KEY (order_id) REFERENCES cinema_orders(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Payment attempts are separate from orders: a late capture may need reconciliation.
+CREATE TABLE IF NOT EXISTS cinema_payments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT UNSIGNED NOT NULL,
+    txn_ref CHAR(32) NOT NULL UNIQUE,
+    environment VARCHAR(16) NOT NULL,
+    tmn_code VARCHAR(8) NOT NULL,
+    amount INT NOT NULL,
+    status VARCHAR(16) NOT NULL DEFAULT 'pending',
+    request_params LONGTEXT NOT NULL,
+    response_payload LONGTEXT NULL,
+    response_code VARCHAR(2) NULL,
+    bank_code VARCHAR(20) NULL,
+    transaction_no VARCHAR(15) NULL,
+    review_reason VARCHAR(255) NULL,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    confirmed_at DATETIME NULL,
+    paid_at DATETIME NULL,
+    UNIQUE KEY provider_transaction (environment,tmn_code,transaction_no),
+    INDEX payment_order (order_id,id),
+    INDEX payment_review (status,created_at),
+    FOREIGN KEY (order_id) REFERENCES cinema_orders(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Legacy archives never reserve seats or imply that an old invoice was paid.
+CREATE TABLE IF NOT EXISTS cinema_history_batches (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    source_name VARCHAR(80) NOT NULL,
+    mapping_hash CHAR(64) NOT NULL,
+    invoice_count INT NOT NULL,
+    ticket_count INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS cinema_legacy_invoices (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    source_name VARCHAR(80) NOT NULL,
+    source_key VARCHAR(190) COLLATE utf8mb4_bin NOT NULL,
+    source_hash CHAR(64) NOT NULL,
+    batch_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NULL,
+    legacy_customer_key VARCHAR(190) NULL,
+    issued_at DATETIME NULL,
+    amount BIGINT UNSIGNED NULL,
+    original_status VARCHAR(120) NULL,
+    raw_data LONGTEXT NOT NULL,
+    UNIQUE KEY legacy_invoice_key (source_name,source_key),
+    INDEX legacy_invoice_user (user_id,issued_at),
+    FOREIGN KEY (batch_id) REFERENCES cinema_history_batches(id),
+    FOREIGN KEY (user_id) REFERENCES cinema_users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS cinema_legacy_tickets (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    source_name VARCHAR(80) NOT NULL,
+    source_key VARCHAR(190) COLLATE utf8mb4_bin NOT NULL,
+    source_hash CHAR(64) NOT NULL,
+    batch_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NULL,
+    invoice_id BIGINT UNSIGNED NULL,
+    legacy_customer_key VARCHAR(190) NULL,
+    legacy_invoice_key VARCHAR(190) COLLATE utf8mb4_bin NULL,
+    movie_title VARCHAR(190) NULL,
+    cinema_name VARCHAR(190) NULL,
+    room_name VARCHAR(120) NULL,
+    seat_label VARCHAR(120) NULL,
+    starts_at DATETIME NULL,
+    amount BIGINT UNSIGNED NULL,
+    original_status VARCHAR(120) NULL,
+    raw_data LONGTEXT NOT NULL,
+    UNIQUE KEY legacy_ticket_key (source_name,source_key),
+    INDEX legacy_ticket_user (user_id,starts_at),
+    INDEX legacy_ticket_invoice (invoice_id),
+    FOREIGN KEY (batch_id) REFERENCES cinema_history_batches(id),
+    FOREIGN KEY (user_id) REFERENCES cinema_users(id),
+    FOREIGN KEY (invoice_id) REFERENCES cinema_legacy_invoices(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

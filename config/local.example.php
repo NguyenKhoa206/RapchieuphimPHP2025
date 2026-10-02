@@ -12,4 +12,13 @@ return [
     // Example for XAMPP: /rapchieuphim/public. Leave blank for auto detection.
     'base_path' => '',
     'allow_demo_payment' => false,
+    'payments' => [
+        'vnpay' => [
+            'enabled' => false,
+            'environment' => 'sandbox', // sandbox | production
+            'tmn_code' => '',
+            'hash_secret' => '',
+            'return_url' => 'https://your-domain.example/payment/return.php',
+        ],
+    ],
 ];

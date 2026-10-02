@@ -120,8 +120,8 @@ http_check($response['status'] === 303 && request($a, '/account/profile.php')['s
 $adminUser = 'httpcheck';
 D::execute('INSERT INTO cinema_admins (username,name,password_hash) VALUES (?,?,?) ON DUPLICATE KEY UPDATE password_hash=VALUES(password_hash),active=1', [$adminUser, 'HTTP Test', password_hash('Password123!', PASSWORD_DEFAULT)]);
 login($admin, '/admin/login.php', $adminUser, 'Password123!');
-foreach (['/admin/index.php', '/admin/movies.php', '/admin/cinemas.php', '/admin/showtimes.php', '/admin/orders.php', '/admin/revenue.php', '/admin/users.php', '/admin/combos.php', '/admin/password.php', '/account/tickets.php'] as $path) {
-    $client = $path === '/account/tickets.php' ? $a : $admin;
+foreach (['/admin/index.php', '/admin/movies.php', '/admin/cinemas.php', '/admin/showtimes.php', '/admin/orders.php', '/admin/revenue.php', '/admin/users.php', '/admin/combos.php', '/admin/password.php', '/admin/payments.php', '/admin/history.php', '/account/tickets.php', '/account/tickets.php?tab=invoices', '/account/tickets.php?tab=tickets'] as $path) {
+    $client = str_starts_with($path, '/account/') ? $a : $admin;
     $r = request($client, $path);
     http_check($r['status'] === 200, 'Route lỗi: ' . $path);
 }
@@ -157,7 +157,57 @@ $range = request($a, $media, 'GET', null, ['Range: bytes=0-9']);
 http_check($range['status'] === 206 && strlen($range['body']) === 10 && $range['body'] === substr($full['body'], 0, 10), 'Range media sai.');
 http_check(request($a, $media, 'GET', null, ['Range: bytes=999999999-'])['status'] === 416, 'Nhận range ngoài file.');
 http_check(request($a, '/media.php?file=../../config/local.php')['status'] === 404, 'Đọc file ngoài upload.');
+// Configured test merchant only; no real provider request is made.
+$booking = request($a, '/booking.php?id=' . $sid);
+http_check(str_contains($booking['body'], 'value="vnpay"'), 'Thiếu lựa chọn VNPay đã cấu hình.');
+preg_match('/name="nonce" value="([a-f0-9]{64})"/', $booking['body'], $nonceMatch);
+$onlineSeat = D::one("SELECT s.id FROM cinema_seats s WHERE s.room_id=? AND NOT EXISTS (SELECT 1 FROM cinema_reservations r JOIN cinema_orders o ON o.id=r.order_id WHERE r.seat_id=s.id AND r.showtime_id=? AND (o.status='paid' OR (o.status='pending' AND o.expires_at>NOW()))) LIMIT 1", [$show['room_id'], $sid]);
+$response = request($a, '/booking.php?id=' . $sid, 'POST', ['csrf' => token($booking), 'nonce' => $nonceMatch[1], 'seats' => [$onlineSeat['id']], 'combos' => [], 'method' => 'vnpay']);
+parse_str((string) parse_url($response['headers']['location'], PHP_URL_QUERY), $onlineQuery);
+$onlineId = (int) $onlineQuery['id'];
+$onlinePage = request($a, '/order.php?id=' . $onlineId);
+http_check(str_contains($onlinePage['body'], 'Thanh toán qua VNPay') && str_contains($onlinePage['headers']['content-security-policy'], 'https://sandbox.vnpayment.vn'), 'Thiếu nút/CSP thanh toán.');
+http_check(request($a, '/payment/start.php?id=' . $onlineId)['status'] === 405, 'GET tạo thanh toán được.');
+http_check(request($a, '/payment/start.php', 'POST', ['id' => $onlineId])['status'] === 419, 'Thanh toán không có CSRF được.');
+$otherPage = request($b, '/account/profile.php');
+request($b, '/payment/start.php', 'POST', ['id' => $onlineId, 'csrf' => token($otherPage)]);
+http_check(D::one('SELECT id FROM cinema_payments WHERE order_id=?', [$onlineId]) === null, 'Khách khác tạo được giao dịch.');
+$redirect = request($a, '/payment/start.php', 'POST', ['id' => $onlineId, 'csrf' => token($onlinePage)]);
+http_check($redirect['status'] === 303 && str_starts_with($redirect['headers']['location'] ?? '', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?'), 'Không chuyển hướng đúng VNPay.');
+$attempt = D::one('SELECT * FROM cinema_payments WHERE order_id=?', [$onlineId]);
+$callback = ['vnp_Amount' => (string) ((int) $attempt['amount'] * 100), 'vnp_BankCode' => 'NCB', 'vnp_TransactionNo' => (string) (500000 + (int) $attempt['id']), 'vnp_TxnRef' => $attempt['txn_ref'], 'vnp_TmnCode' => 'TEST1234', 'vnp_ResponseCode' => '00', 'vnp_TransactionStatus' => '00', 'vnp_PayDate' => date('YmdHis')];
+$callback['vnp_SecureHash'] = App\Services\PaymentService::signature($callback, 'test-only-vnpay-signing-secret');
+$return = request($a, '/payment/return.php?' . http_build_query($callback));
+http_check($return['status'] === 303 && str_contains($return['headers']['location'], 'order.php') && D::one('SELECT status FROM cinema_orders WHERE id=?', [$onlineId])['status'] === 'pending', 'ReturnURL đã cập nhật trả tiền.');
+http_check(request($b, '/api/order-status.php?id=' . $onlineId)['status'] === 404, 'API trạng thái lộ đơn người khác.');
+$adminOnline = request($admin, '/admin/order.php?id=' . $onlineId);
+request($admin, '/admin/order.php?id=' . $onlineId, 'POST', ['csrf' => token($adminOnline), 'action' => 'pay']);
+http_check(D::one('SELECT status FROM cinema_orders WHERE id=?', [$onlineId])['status'] === 'pending', 'Admin xác nhận online thủ công.');
+$provider = [];
+$badIpn = request($provider, '/payment/ipn.php?vnp_SecureHash=invalid');
+http_check($badIpn['status'] === 200 && json_decode($badIpn['body'], true)['RspCode'] === '97', 'IPN giả không bị từ chối.');
+$ipnPath = '/payment/ipn.php?' . http_build_query($callback);
+$ipn = request($provider, $ipnPath);
+http_check($ipn['status'] === 200 && json_decode($ipn['body'], true)['RspCode'] === '00', 'IPN HTTP hợp lệ lỗi.');
+http_check(json_decode(request($provider, $ipnPath)['body'], true)['RspCode'] === '02', 'IPN HTTP lặp không idempotent.');
+$onlinePaid = request($a, '/order.php?id=' . $onlineId);
+http_check(str_contains($onlinePaid['body'], 'VNPay Sandbox') && !str_contains($onlinePaid['body'], 'Mã này tại quầy') && str_contains($onlinePaid['body'], 'không dùng để vào rạp'), 'Vé sandbox thiếu nhãn thử nghiệm.');
+http_check(json_decode(request($a, '/api/order-status.php?id=' . $onlineId)['body'], true)['status'] === 'paid', 'API không cập nhật trạng thái.');
+http_check(isset($onlinePaid['headers']['cache-control']) && str_contains($onlinePaid['headers']['cache-control'], 'no-store'), 'Đơn cá nhân bị cache.');
+
+D::execute('INSERT INTO cinema_history_batches (source_name,mapping_hash,invoice_count,ticket_count) VALUES (?,?,1,0)', ['http-' . $phone, hash('sha256', 'http')]);
+$batch = (int) db()->lastInsertId();
+D::execute('INSERT INTO cinema_legacy_invoices (source_name,source_key,source_hash,batch_id,user_id,amount,original_status,raw_data) VALUES (?,?,?,?,?,?,?,?)', ['http-' . $phone, 'HD-XSS-' . $phone, hash('sha256', 'fixture'), $batch, $user['id'], 120000, '<script>history-xss</script>', '{"secret":"admin-only"}']);
+$historyId = (int) db()->lastInsertId();
+$historic = request($a, '/account/history.php?kind=invoices&id=' . $historyId);
+http_check($historic['status'] === 200 && str_contains($historic['body'], '&lt;script&gt;history-xss&lt;/script&gt;') && !str_contains($historic['body'], 'admin-only'), 'Lịch sử chưa escape hoặc lộ raw data.');
+http_check(request($b, '/account/history.php?kind=invoices&id=' . $historyId)['status'] === 404, 'IDOR lịch sử hóa đơn.');
+http_check(str_contains(request($a, '/account/tickets.php?tab=invoices')['body'], 'HD-XSS-' . $phone) && !str_contains(request($b, '/account/tickets.php?tab=invoices')['body'], 'HD-XSS-' . $phone), 'Danh sách lịch sử lộ tài khoản.');
+http_check(request($admin, '/admin/history.php?id=99999999')['status'] === 404, 'Admin history không trả 404.');
+http_check(str_contains(request($admin, '/admin/history.php?kind=invoices&id=' . $historyId)['body'], 'admin-only'), 'Admin không đối chiếu được dữ liệu nguồn.');
+http_check(request($a, '/admin/history.php')['status'] === 303, 'Khách vào được lịch sử quản trị.');
+
 $page = request($a, '/account/profile.php');
 $response = request($a, '/auth/logout.php', 'POST', ['csrf' => token($page), 'role' => 'user']);
 http_check($response['status'] === 303 && request($a, '/account/profile.php')['status'] === 303, 'Đăng xuất chưa xóa phiên.');
-echo "PASS HTTP: $checks kiểm tra đăng ký, phiên, CSRF, hồ sơ, đặt vé, IDOR, admin, upload và media range.\n";
+echo "PASS HTTP: $checks kiểm tra đăng ký, phiên, CSRF, hồ sơ, đặt vé, IDOR, VNPay/IPN, lịch sử, admin, upload và media range.\n";

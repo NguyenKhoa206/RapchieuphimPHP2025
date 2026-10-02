@@ -23,9 +23,9 @@ Import được đánh dấu trong `cinema_meta` để tránh nhập trùng. Tê
 | `RapChieu` | `cinema_cinemas` | Giữ ID |
 | `PhongChieu` | `cinema_rooms`, `cinema_seats` | Sinh ghế A1… theo `SoGhe`, tối đa 26 hàng × 30 cột |
 | `LichChieu` | `cinema_showtimes` | Giữ ID, tính giờ kết thúc theo thời lượng phim |
-| `HoaDon`, `Ve` | Giữ nguyên bảng cũ | Chưa đưa vào báo cáo/đơn mới |
+| `HoaDon`, `Ve` | `cinema_legacy_invoices`, `cinema_legacy_tickets` | Import riêng sau khi đối chiếu mapping, giữ nguyên bảng nguồn |
 
-Repo cũ không cung cấp SQL schema hay liên kết đáng tin cậy giữa hóa đơn và từng vé. Không suy đoán quan hệ qua `MaKH`: một khách có thể có nhiều đơn. Để nhập lịch sử tài chính, cần schema thật và đối chiếu khóa hóa đơn trên vé, giá, ghế, trạng thái, phương thức, thời điểm thanh toán. Sau đó mới viết migration riêng có tổng kiểm tra trước/sau.
+Repo cũ không cung cấp SQL schema hay liên kết đáng tin cậy giữa hóa đơn và từng vé. Không suy đoán quan hệ qua `MaKH`: một khách có thể có nhiều đơn. Để nhập lịch sử tài chính, cần schema thật và đối chiếu khóa hóa đơn trên vé, giá, ghế, trạng thái, phương thức, thời điểm thanh toán. Dùng [công cụ nhập lịch sử](HISTORY.md) để chạy thử, đối chiếu tổng kiểm tra trước/sau, rồi áp dụng. Không có khóa hóa đơn thì vé vẫn lưu độc lập.
 
 Các lịch cũ được giữ nguyên, gồm cả lịch quá khứ. Các lịch trùng sẵn có không được tự dịch chuyển; hãy rà soát trước khi mở bán. Khi tạo/sửa lịch mới, hệ thống kiểm tra giao nhau và 15 phút dọn phòng qua cả nửa đêm.
 

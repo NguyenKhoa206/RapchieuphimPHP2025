@@ -1,0 +1,29 @@
+{
+  "source_name": "legacy-2025",
+  "invoices": {
+    "table": "HoaDon",
+    "columns": {
+      "id": null,
+      "customer_id": "MaKH",
+      "issued_at": "NgayLap",
+      "amount": "TongTien",
+      "status": null
+    }
+  },
+  "tickets": {
+    "table": "Ve",
+    "columns": {
+      "id": null,
+      "customer_id": "MaKH",
+      "invoice_id": null,
+      "showtime_id": "MaLich",
+      "movie_title": null,
+      "cinema_name": null,
+      "room_name": null,
+      "seat_label": null,
+      "starts_at": null,
+      "amount": null,
+      "status": null
+    }
+  }
+}

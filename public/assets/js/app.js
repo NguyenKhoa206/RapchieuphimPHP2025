@@ -1,12 +1,31 @@
 "use strict";
-document.querySelector(".nav-toggle")?.addEventListener("click", (event) => {
-    const button = event.currentTarget;
-    const expanded = button.getAttribute("aria-expanded") !== "true";
-    button.setAttribute("aria-expanded", String(expanded));
-    document
-        .getElementById("primary-nav")
-        ?.classList.toggle("is-open", expanded);
+const navToggle = document.querySelector(".nav-toggle");
+const navBackdrop = document.querySelector(".nav-backdrop");
+function setNavigation(open) {
+    navToggle?.setAttribute("aria-expanded", String(open));
+    document.getElementById("primary-nav")?.classList.toggle("is-open", open);
+    document.body.classList.toggle("nav-open", open);
+    if (navBackdrop) navBackdrop.hidden = !open;
+}
+navToggle?.addEventListener("click", () =>
+    setNavigation(navToggle.getAttribute("aria-expanded") !== "true"),
+);
+navBackdrop?.addEventListener("click", () => {
+    setNavigation(false);
+    navToggle?.focus();
 });
+document.addEventListener("keydown", (event) => {
+    if (
+        event.key === "Escape" &&
+        navToggle?.getAttribute("aria-expanded") === "true"
+    ) {
+        setNavigation(false);
+        navToggle.focus();
+    }
+});
+window
+    .matchMedia("(min-width: 901px)")
+    .addEventListener("change", () => setNavigation(false));
 document.querySelectorAll("[data-confirm]").forEach((button) =>
     button.addEventListener("click", (event) => {
         if (!window.confirm(button.dataset.confirm)) event.preventDefault();
@@ -102,3 +121,56 @@ if (bookingForm) {
     setInterval(refreshSeats, 15000);
     update();
 }
+
+document.querySelectorAll("[data-countdown]").forEach((timer) => {
+    const deadline = Date.parse(timer.dataset.countdown);
+    if (!Number.isFinite(deadline)) return;
+    const output = timer.querySelector("[data-time-left]");
+    const tick = () => {
+        const remaining = Math.max(
+            0,
+            Math.ceil((deadline - Date.now()) / 1000),
+        );
+        output.textContent = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`;
+        if (remaining === 0) {
+            clearInterval(interval);
+            window.location.reload();
+        }
+    };
+    const interval = setInterval(tick, 1000);
+    tick();
+});
+const paymentProgress = document.querySelector("[data-order-poll]");
+if (paymentProgress) {
+    let polls = 0;
+    const interval = setInterval(async () => {
+        if (document.hidden) return;
+        if (++polls > 180) {
+            clearInterval(interval);
+            return;
+        }
+        try {
+            const response = await fetch(paymentProgress.dataset.orderPoll, {
+                cache: "no-store",
+            });
+            if (!response.ok) return;
+            const state = await response.json();
+            if (
+                state.status !== "pending" ||
+                state.payment_status !== paymentProgress.dataset.paymentState
+            ) {
+                clearInterval(interval);
+                window.location.reload();
+            }
+        } catch {
+            /* The visible order page remains the source of truth. */
+        }
+    }, 5000);
+}
+document.querySelectorAll(".payment-start-form").forEach((form) => {
+    form.addEventListener("submit", () => {
+        const button = form.querySelector('button[type="submit"]');
+        button.disabled = true;
+        button.textContent = "Đang chuyển đến VNPay…";
+    });
+});

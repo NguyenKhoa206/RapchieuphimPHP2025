@@ -41,3 +41,40 @@ PHP lint và JS syntax:
 find app config public scripts tests -name '*.php' -exec php -l {} \;
 node --check public/assets/js/app.js
 ```
+
+## Thanh toán và lịch sử
+
+```bash
+DB_NAME=cinema_test php tests/payments.php
+DB_NAME=cinema_test php tests/payment-concurrency.php
+DB_NAME=cinema_test php tests/history.php
+```
+
+`payments.php`: 30 kiểm tra với merchant giả, gồm vector HMAC độc lập, URL ký đúng giá, CSRF/ownership ở lớp dịch vụ, IPN giả/sai số tiền/sai merchant, ReturnURL chỉ đọc, callback lặp, thử lại, khoản thanh toán thứ hai, tiền về muộn/hủy và doanh thu Sandbox/production tách riêng. Không gọi ngân hàng thật. `payment-concurrency.php` chạy IPN lặp và IPN muộn cùng lúc người khác đặt lại ghế bằng process độc lập.
+
+`history.php`: 19 kiểm tra với bảng nguồn giả, gồm dry-run không ghi, khóa chuỗi, hóa đơn nhiều vé không nhân tổng, không suy đoán qua khách hàng, phân quyền lịch sử, giữ dữ liệu gốc, nhập lại không trùng, nguồn/mapping thay đổi, quan hệ sai/thiếu, rollback, SQL identifier và tiền lẻ.
+
+Bản `http.php` hiện kiểm tra thêm VNPay và lịch sử; server thử nghiệm cần môi trường merchant giả giống CLI:
+
+```bash
+export DB_NAME=cinema_http_test
+export VNPAY_ENABLED=1 VNPAY_ENVIRONMENT=sandbox VNPAY_TMN_CODE=TEST1234
+export VNPAY_HASH_SECRET=test-only-vnpay-signing-secret
+export VNPAY_RETURN_URL=https://cinema.example/payment/return.php
+php -S 127.0.0.1:8000 -t public
+```
+
+Trong terminal khác đặt cùng các biến thử rồi chạy `php tests/http.php`. Đây là khóa fixture công khai, không dùng trong triển khai hoặc kết nối nhà cung cấp.
+
+## Trình duyệt
+
+Node.js 20+ chỉ dùng để chạy kiểm thử. `package-lock.json` cố định các dependency của công cụ; website PHP không cần `npm install` để hoạt động.
+
+```bash
+npm ci --ignore-scripts --no-audit --no-fund
+npx playwright install --with-deps chromium
+```
+
+Chuẩn bị **CSDL UI mới** tên `cinema_ui_test`, đặt biến VNPay thử như trên, chạy installer/seed và `php tests/ui-fixture.php`, rồi khởi động PHP server. Trong terminal có cùng cấu hình: `npm run test:ui`.
+
+Kiểm tra 1440×960 và 390×844: trang phim, lịch, chọn ghế/tính giá, chuyển sang trang ngân hàng mô phỏng, IPN ký từ Node, vé đã thanh toán, danh sách vé, lịch sử, quản trị và doanh thu. Kiểm tra tràn ngang, ảnh thiếu, JavaScript/CSP, mở/đóng menu, và các luật WCAG A/AA bằng axe. `test-results/` chứa ảnh và báo cáo; CI tải lên artifact `cinema-ui-checks`. Kiểm tra tự động không chứng minh toàn bộ WCAG hay thay thế rà soát thị giác/thử merchant thật.

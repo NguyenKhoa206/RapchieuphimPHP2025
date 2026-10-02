@@ -26,7 +26,7 @@ final class BookingService
 
     public static function placeOrder(int $showtimeId, array $user, array $seatIds, array $combos, string $method, string $nonce): int
     {
-        if (!in_array($method, ['counter', 'demo'], true) || ($method === 'demo' && !config('allow_demo_payment'))) {
+        if (!in_array($method, ['counter', 'demo', 'vnpay'], true) || ($method === 'demo' && !config('allow_demo_payment')) || ($method === 'vnpay' && !PaymentService::available())) {
             throw new \DomainException('Phương thức thanh toán không hợp lệ.');
         }
         if (count($seatIds) < 1 || count($seatIds) > 8 || !preg_match('/^[a-f0-9]{64}$/', $nonce)) {
@@ -125,6 +125,7 @@ final class BookingService
                 $order['status'] = 'expired';
             }
             $order['items'] = D::all('SELECT * FROM cinema_order_items WHERE order_id=? ORDER BY kind DESC,id', [$id]);
+            $order['payment'] = D::one('SELECT id,environment,txn_ref,status,bank_code,transaction_no,response_code,paid_at,review_reason FROM cinema_payments WHERE order_id=? ORDER BY id DESC LIMIT 1', [$id]);
         }
         return $order;
     }
@@ -151,6 +152,9 @@ final class BookingService
                 throw new \DomainException('Đơn đã được xử lý hoặc hết hạn giữ ghế.');
             }
             if ($action === 'pay') {
+                if ($order['payment_method'] === 'vnpay') {
+                    throw new \DomainException('VNPay chỉ được xác nhận qua thông báo của cổng thanh toán.');
+                }
                 if ($adminId === null && ($order['payment_method'] !== 'demo' || !config('allow_demo_payment'))) {
                     throw new \DomainException('Chỉ nhân viên mới có thể xác nhận thanh toán tại quầy.');
                 }

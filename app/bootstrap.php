@@ -10,6 +10,7 @@ if (is_file(APP_ROOT . '/config/local.php')) {
 $GLOBALS['app_config'] = $config;
 date_default_timezone_set($config['timezone']);
 require_once __DIR__ . '/Support/functions.php';
+require_once __DIR__ . '/Support/icons.php';
 spl_autoload_register(static function (string $class): void {
     if (str_starts_with($class, 'App\\')) {
         $path = __DIR__ . '/' . str_replace('\\', '/', substr($class, 4)) . '.php';
@@ -30,7 +31,11 @@ if (PHP_SAPI !== 'cli') {
     header('X-Content-Type-Options: nosniff');
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('X-Frame-Options: SAMEORIGIN');
-    header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; media-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'self'");
+    $paymentHost = App\Services\PaymentService::available() ? (App\Services\PaymentService::sandbox() ? ' https://sandbox.vnpayment.vn' : ' https://pay.vnpay.vn') : '';
+    header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; media-src 'self'; form-action 'self'$paymentHost; frame-ancestors 'self'; base-uri 'self'");
+    if (str_contains($_SERVER['SCRIPT_NAME'] ?? '', '/account/') || str_contains($_SERVER['SCRIPT_NAME'] ?? '', '/admin/') || str_contains($_SERVER['SCRIPT_NAME'] ?? '', '/payment/') || basename($_SERVER['SCRIPT_NAME'] ?? '') === 'order.php') {
+        header('Cache-Control: private, no-store');
+    }
 }
 set_exception_handler(static function (Throwable $error): void {
     error_log((string) $error);

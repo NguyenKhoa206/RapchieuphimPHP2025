@@ -1,4 +1,5 @@
 /config/local.php
+/config/history.local.json
 /storage/uploads/*
 !/storage/uploads/.gitkeep
 /storage/logs/*
@@ -13,3 +14,4 @@
 .DS_Store
 Thumbs.db
 /.php-cs-fixer.cache
+/test-results/

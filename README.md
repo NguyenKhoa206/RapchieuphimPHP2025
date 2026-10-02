@@ -1,6 +1,6 @@
 # Rạp chiếu phim PHP
 
-Ứng dụng PHP/MySQL quản lý phim, rạp, phòng, lịch chiếu, đặt ghế, combo và doanh thu. Bản này gom phần xử lý dùng chung, bỏ các trang HTML/file `copy` trùng lặp, và bổ sung luồng đặt vé lưu vào CSDL.
+Ứng dụng PHP/MySQL quản lý phim, rạp, phòng, lịch chiếu, đặt ghế, combo, thanh toán VNPay, lịch sử hóa đơn/vé và doanh thu. Bản này gom phần xử lý dùng chung, bỏ các trang HTML/file `copy` trùng lặp, và bổ sung luồng đặt vé lưu vào CSDL.
 
 ## Yêu cầu
 
@@ -40,32 +40,32 @@ php scripts/create-admin.php admin
 
 Không chạy `seed.php` hoặc tạo admin trước bước import. Script nhập khách hàng, admin, phim, rạp, phòng và lịch chiếu từ các tên bảng/cột mà mã nguồn cũ sử dụng. Khóa khách hàng dạng `KH001` được giữ ở `legacy_key`; phim/phòng/lịch giữ ID cũ. MD5 cũ được nâng cấp thành `password_hash` sau lần đăng nhập thành công đầu tiên. Lệnh tạo admin sẽ từ chối ghi đè admin có sẵn; chỉ dùng `--reset` khi chủ động cần đặt lại mật khẩu.
 
-Repository cũ không có schema SQL đầy đủ. Vì quan hệ `HoaDon`–`Ve` chưa xác định được và báo cáo cũ nối qua khách hàng, **script chưa nhập lịch sử vé/hóa đơn cũ vào báo cáo mới**. Các bảng cũ vẫn giữ nguyên để đối chiếu. Sơ đồ ghế được tạo từ tổng `SoGhe`, chưa thể tái tạo vị trí thực nếu không có bảng ghế gốc. Xem [hướng dẫn chuyển dữ liệu](docs/MIGRATION.md) trước khi chuyển hệ thống đang dùng.
+Repository cũ không có schema SQL đầy đủ. Vì quan hệ `HoaDon`–`Ve` chưa xác định được và báo cáo cũ nối qua khách hàng, **lịch sử được nhập vào kho lưu trữ riêng bằng `scripts/import-history.php`, sau khi đối chiếu mapping**. Các bảng cũ vẫn giữ nguyên để đối chiếu. Sơ đồ ghế được tạo từ tổng `SoGhe`, chưa thể tái tạo vị trí thực nếu không có bảng ghế gốc. Xem [hướng dẫn chuyển dữ liệu](docs/MIGRATION.md) trước khi chuyển hệ thống đang dùng.
 
 ## Cấu trúc
 
 | Đường dẫn | Mục đích |
 | --- | --- |
 | `public/` | Điểm vào HTTP; trang khách hàng, quản trị, API ghế, CSS/JS/ảnh |
-| `app/Services/` | Nghiệp vụ phim/lịch, giữ ghế, đơn vé, doanh thu |
+| `app/Services/` | Phim/lịch, giữ ghế, đơn vé, VNPay, nhập lịch sử, doanh thu |
 | `app/Support/` | CSDL, đăng nhập, CSRF, upload, helper |
 | `app/Views/` | Layout và thành phần giao diện dùng chung |
 | `config/` | Cấu hình mặc định và mẫu cấu hình riêng |
 | `database/` | Schema mới và ánh xạ ảnh cũ đã loại trùng |
-| `scripts/` | Lệnh cài đặt, dữ liệu mẫu, admin, chuyển dữ liệu |
+| `scripts/` | Cài đặt, seed, admin, migrate danh mục và import lịch sử |
 | `storage/uploads/` | Media tải lên; phục vụ qua `public/media.php` |
 | `tests/` | Kiểm thử nghiệp vụ trên CSDL riêng |
 | `docs/` | Chuyển dữ liệu, triển khai, kiểm thử |
 
-Không commit `config/local.php`, mật khẩu CSDL, dữ liệu upload hoặc bản sao lưu. Các URL cũ như `trangchu.php`, `admin/bophim.php` đã đổi sang cấu trúc trong `public/`; hãy cập nhật bookmark và liên kết ngoài.
+Không commit `config/local.php`, `config/history.local.json`, mật khẩu CSDL, dữ liệu upload hoặc bản sao lưu. Các URL cũ như `trangchu.php`, `admin/bophim.php` đã đổi sang cấu trúc trong `public/`; hãy cập nhật bookmark và liên kết ngoài.
 
 ## Luồng đặt vé
 
-Khách đăng nhập → chọn suất/ghế/combo → tạo đơn chờ → thanh toán tại quầy → nhân viên xác nhận trong quản trị → xem/in vé. Đơn giữ ghế tối đa 15 phút, hoặc đến giờ chiếu. Hủy đơn chờ trả lại ghế; đơn hết hạn không khóa ghế nữa. Ghế hết hạn được dọn khi xử lý đặt vé tiếp theo. Đơn đã trả tiền không được hủy theo luồng này.
+Khách đăng nhập → chọn suất/ghế/combo → tạo đơn chờ → thanh toán tại quầy hoặc VNPay → xác nhận tại quầy/IPN hợp lệ → xem/in vé. Đơn giữ ghế tối đa 15 phút, hoặc đến giờ chiếu. Hủy đơn chờ trả lại ghế; đơn hết hạn không khóa ghế nữa. Ghế hết hạn được dọn khi xử lý đặt vé tiếp theo. Đơn đã trả tiền không được hủy theo luồng này.
 
 Giá lấy từ CSDL, không tin tổng tiền gửi từ trình duyệt. Transaction, khóa suất chiếu và khóa duy nhất `(showtime_id, seat_id)` ngăn đặt trùng ghế. Gửi lại cùng biểu mẫu không tạo thêm đơn. Phim giới hạn tuổi yêu cầu khách cập nhật ngày sinh.
 
-**Chưa tích hợp cổng thanh toán trực tuyến.** `allow_demo_payment` mặc định tắt; bật bằng `ALLOW_DEMO_PAYMENT=1` hoặc cấu hình riêng để thử luồng. Mọi đơn demo được gắn nhãn và tách khỏi doanh thu tại quầy. Đơn tại quầy chỉ được admin xác nhận. Không dùng demo để xác nhận tiền thật.
+**VNPay đã tích hợp, mặc định tắt đến khi có cấu hình merchant riêng.** Xem [cấu hình VNPay](docs/PAYMENTS.md) và [nhập lịch sử](docs/HISTORY.md). `allow_demo_payment` mặc định tắt; bật bằng `ALLOW_DEMO_PAYMENT=1` hoặc cấu hình riêng để thử luồng. Mọi đơn demo được gắn nhãn và tách khỏi doanh thu tại quầy. Đơn tại quầy chỉ được admin xác nhận. Không dùng demo để xác nhận tiền thật.
 
 ## Kiểm thử
 
@@ -74,6 +74,9 @@ Chỉ dùng CSDL riêng có tên kết thúc bằng `_test`; lệnh kiểm thử
 ```bash
 DB_NAME=cinema_test php scripts/install.php
 DB_NAME=cinema_test php tests/run.php
+DB_NAME=cinema_test php tests/payments.php
+DB_NAME=cinema_test php tests/payment-concurrency.php
+DB_NAME=cinema_test php tests/history.php
 DB_NAME=cinema_test php tests/concurrency.php
 DB_NAME=cinema_migration_test php scripts/install.php
 DB_NAME=cinema_migration_test php tests/migration.php
@@ -81,4 +84,4 @@ DB_NAME=cinema_migration_test php tests/migration.php
 
 PowerShell: đặt `$env:DB_NAME='cinema_test'` rồi chạy các lệnh PHP. Kiểm thử đồng thời dùng hai process PHP độc lập; cần cho phép `proc_open` trong PHP CLI. Xem [kiểm thử](docs/TESTING.md) và [triển khai](docs/DEPLOYMENT.md).
 
-Workflow GitHub Actions chạy PHP lint, kiểm thử nghiệp vụ, đặt ghế đồng thời, migration giả lập và các luồng HTTP trên MariaDB riêng. Không sử dụng CSDL thật hoặc mật khẩu triển khai để chạy CI.
+Workflow GitHub Actions chạy PHP lint, nghiệp vụ/thanh toán/lịch sử, đặt ghế và IPN đồng thời, migration giả lập, luồng HTTP, giao diện desktop/mobile và kiểm tra khả năng truy cập. Node.js chỉ phục vụ kiểm thử giao diện, không cần để chạy website. Không sử dụng CSDL thật hoặc mật khẩu triển khai để chạy CI.

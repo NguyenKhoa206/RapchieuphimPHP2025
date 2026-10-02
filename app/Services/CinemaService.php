@@ -28,13 +28,26 @@ final class CinemaService
         return ['items' => D::all("SELECT * FROM cinema_movies WHERE $where ORDER BY release_date DESC,id DESC LIMIT 12 OFFSET $offset", $params), 'total' => $total, 'page' => $page];
     }
 
-    public static function showtimes(?int $movie = null): array
+    public static function showtimes(?int $movie = null, ?string $date = null, ?int $cinema = null): array
     {
         $sql = 'SELECT s.*,m.title,m.poster,m.age_rating,c.name AS cinema_name,r.name AS room_name,r.room_type FROM cinema_showtimes s JOIN cinema_movies m ON m.id=s.movie_id JOIN cinema_rooms r ON r.id=s.room_id JOIN cinema_cinemas c ON c.id=r.cinema_id WHERE s.active=1 AND m.active=1 AND r.active=1 AND c.active=1 AND s.starts_at>NOW()';
         $params = [];
         if ($movie) {
             $sql .= ' AND s.movie_id=?';
             $params[] = $movie;
+        }
+        if ($date) {
+            $start = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+            if (!$start || $start->format('Y-m-d') !== $date) {
+                throw new \DomainException('Ngày chiếu không hợp lệ.');
+            }
+            $sql .= ' AND s.starts_at>=? AND s.starts_at<?';
+            $params[] = $date . ' 00:00:00';
+            $params[] = $start->modify('+1 day')->format('Y-m-d H:i:s');
+        }
+        if ($cinema) {
+            $sql .= ' AND r.cinema_id=?';
+            $params[] = $cinema;
         }
         return D::all($sql . ' ORDER BY s.starts_at,c.name,r.name LIMIT 200', $params);
     }
