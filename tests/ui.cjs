@@ -152,24 +152,47 @@ async function login(page, admin = false) {
             ]);
             const orderURL = page.url();
             await inspect(page, `${device}-payment`);
+            const gatewayRequests = [];
             // Stub only the bank page. No request to a real merchant or bank is made.
             await context.route(
                 "https://sandbox.vnpayment.vn/**",
                 async (route) => {
+                    gatewayRequests.push({
+                        url: route.request().url(),
+                        navigation: route.request().isNavigationRequest(),
+                    });
                     await route.fulfill({
                         contentType: "text/html",
                         body: '<html lang="vi"><title>Test gateway</title><h1>VNPay sandbox stub</h1></html>',
                     });
                 },
             );
-            await Promise.all([
+            const [redirect] = await Promise.all([
+                page.waitForResponse((response) =>
+                    new URL(response.url()).pathname.endsWith(
+                        "/payment/start.php",
+                    ),
+                ),
                 page.waitForURL("https://sandbox.vnpayment.vn/**"),
                 page.locator(".payment-start-form button").click(),
             ]);
             // Read the document URL: a later favicon request must not replace it.
             const gatewayURL = page.url();
+            fs.writeFileSync(
+                `test-results/${device}-gateway-debug.json`,
+                JSON.stringify(
+                    {
+                        status: redirect.status(),
+                        location: await redirect.headerValue("location"),
+                        documentURL: gatewayURL,
+                        gatewayRequests,
+                    },
+                    null,
+                    2,
+                ),
+            );
             const provider = new URL(gatewayURL).searchParams;
-            assert.equal(provider.get("vnp_TmnCode"), "TEST1234");
+            assert.equal(provider.get("vnp_TmnCode"), "TEST1234", gatewayURL);
             assert.match(provider.get("vnp_TxnRef"), /^[A-F0-9]{32}$/);
             assert.equal(
                 Number(provider.get("vnp_Amount")),
