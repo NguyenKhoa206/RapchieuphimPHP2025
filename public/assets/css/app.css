@@ -1,7 +1,7 @@
 :root {
     --ink: #111e30;
     --muted: #657082;
-    --orange: #ce5316;
+    --orange: #c64c11;
     --orange-dark: #a83f09;
     --cream: #f7f8fa;
     --border: #e1e5ec;
@@ -793,7 +793,7 @@ label input[type="checkbox"] {
 .badge-cancelled,
 .badge-expired {
     background: #edf0f4;
-    color: #667181;
+    color: #596576;
 }
 .table-scroll {
     overflow-x: auto;

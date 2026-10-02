@@ -156,6 +156,12 @@ async function login(page, admin = false) {
                 page.locator(".payment-start-form button").click(),
             ]);
             assert(gatewayURL, "Payment redirect was blocked or missing");
+            await page.goBack();
+            await page.locator(".payment-start-form button").waitFor();
+            assert(
+                await page.locator(".payment-start-form button").isEnabled(),
+                "Back from VNPay left checkout disabled",
+            );
             const provider = new URL(gatewayURL).searchParams;
             const callback = {
                 vnp_Amount: provider.get("vnp_Amount"),

@@ -168,8 +168,15 @@ if (paymentProgress) {
     }, 5000);
 }
 document.querySelectorAll(".payment-start-form").forEach((form) => {
+    const button = form.querySelector('button[type="submit"]');
+    const original = button.innerHTML;
+    window.addEventListener("pageshow", (event) => {
+        if (event.persisted) {
+            button.disabled = false;
+            button.innerHTML = original;
+        }
+    });
     form.addEventListener("submit", () => {
-        const button = form.querySelector('button[type="submit"]');
         button.disabled = true;
         button.textContent = "Đang chuyển đến VNPay…";
     });
