@@ -2,7 +2,7 @@ name: PHP checks
 
 on:
   push:
-    branches: [main, "codex/**"]
+    branches: [main, update]
   pull_request:
 
 permissions:

@@ -33,21 +33,21 @@ async function inspect(page, name) {
     await page.locator("h1").waitFor();
     await page.evaluate(async () => {
         await Promise.all(
-            [...document.images].map((img) => {
+            [...document.images].map(async (img) => {
                 img.loading = "eager";
-                return img.complete
-                    ? Promise.resolve()
-                    : new Promise((resolve) => {
-                          img.onload = resolve;
-                          img.onerror = resolve;
-                      });
+                if (!img.complete) {
+                    await new Promise((resolve) => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    });
+                }
+                if (img.naturalWidth) await img.decode();
             }),
         );
     });
     assert(
-        await page.evaluate(
-            () => document.documentElement.scrollWidth <= window.innerWidth + 1,
-        ),
+        (await page.evaluate(() => document.documentElement.scrollWidth)) <=
+            page.viewportSize().width + 1,
         `${name}: horizontal page overflow`,
     );
     assert.equal(

@@ -625,6 +625,9 @@ label input[type="checkbox"] {
     gap: 28px;
     align-items: start;
 }
+.booking-layout > div {
+    min-width: 0;
+}
 .booking-summary {
     position: sticky;
     top: 24px;
@@ -1082,7 +1085,7 @@ td form {
     .auth-layout,
     .two-columns,
     .booking-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 24px;
     }
     .auth-intro {
