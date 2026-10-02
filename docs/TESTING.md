@@ -50,7 +50,7 @@ DB_NAME=cinema_test php tests/payment-concurrency.php
 DB_NAME=cinema_test php tests/history.php
 ```
 
-`payments.php`: 30 kiểm tra với merchant giả, gồm vector HMAC độc lập, URL ký đúng giá, CSRF/ownership ở lớp dịch vụ, IPN giả/sai số tiền/sai merchant, ReturnURL chỉ đọc, callback lặp, thử lại, khoản thanh toán thứ hai, tiền về muộn/hủy và doanh thu Sandbox/production tách riêng. Không gọi ngân hàng thật. `payment-concurrency.php` chạy IPN lặp và IPN muộn cùng lúc người khác đặt lại ghế bằng process độc lập.
+`payments.php`: 30 kiểm tra với merchant giả, gồm vector HMAC độc lập, URL ký đúng giá, quyền sở hữu đơn ở lớp dịch vụ, IPN giả/sai số tiền/sai merchant, ReturnURL chỉ đọc, callback lặp, thử lại, khoản thanh toán thứ hai, tiền về muộn/hủy và doanh thu Sandbox/production tách riêng. CSRF được kiểm tra qua HTTP. Không gọi ngân hàng thật. `payment-concurrency.php` chạy IPN lặp và IPN muộn cùng lúc người khác đặt lại ghế bằng process độc lập.
 
 `history.php`: 19 kiểm tra với bảng nguồn giả, gồm dry-run không ghi, khóa chuỗi, hóa đơn nhiều vé không nhân tổng, không suy đoán qua khách hàng, phân quyền lịch sử, giữ dữ liệu gốc, nhập lại không trùng, nguồn/mapping thay đổi, quan hệ sai/thiếu, rollback, SQL identifier và tiền lẻ.
 
@@ -78,3 +78,5 @@ npx playwright install --with-deps chromium
 Chuẩn bị **CSDL UI mới** tên `cinema_ui_test`, đặt biến VNPay thử như trên, chạy installer/seed và `php tests/ui-fixture.php`, rồi khởi động PHP server. Trong terminal có cùng cấu hình: `npm run test:ui`.
 
 Kiểm tra 1440×960 và 390×844: trang phim, lịch, chọn ghế/tính giá, chuyển sang trang ngân hàng mô phỏng, IPN ký từ Node, vé đã thanh toán, danh sách vé, lịch sử, quản trị và doanh thu. Kiểm tra tràn ngang, ảnh thiếu, JavaScript/CSP, mở/đóng menu, và các luật WCAG A/AA bằng axe. `test-results/` chứa ảnh và báo cáo; CI tải lên artifact `cinema-ui-checks`. Kiểm tra tự động không chứng minh toàn bộ WCAG hay thay thế rà soát thị giác/thử merchant thật.
+
+Bộ kiểm thử chặn POST `/payment/start.php`, thực hiện request đến PHP với `maxRedirects: 0`, xác minh phản hồi 303/URL/số tiền/chữ ký rồi thay phản hồi trong trình duyệt bằng trang ngân hàng mô phỏng tại cùng URL. Cách này dừng trước khi gọi nhà cung cấp; không xác minh giao diện ngân hàng hoặc toàn bộ bước chuyển trang khác nguồn của một giao dịch merchant thật. Ứng dụng vẫn trả 303 bình thường ngoài kiểm thử.

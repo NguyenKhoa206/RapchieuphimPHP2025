@@ -10,6 +10,25 @@ if (!process.env.DB_NAME?.endsWith("_test"))
 const results = [];
 fs.mkdirSync("test-results/screenshots", { recursive: true });
 
+function signParams(params) {
+    const encode = (value) =>
+        encodeURIComponent(value)
+            .replace(
+                /[!'()*]/g,
+                (character) =>
+                    `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
+            )
+            .replace(/%20/g, "+");
+    const encoded = Object.keys(params)
+        .sort()
+        .map((key) => `${encode(key)}=${encode(params[key])}`)
+        .join("&");
+    return crypto
+        .createHmac("sha512", "test-only-vnpay-signing-secret")
+        .update(encoded)
+        .digest("hex");
+}
+
 async function inspect(page, name) {
     await page.locator("h1").waitFor();
     await page.evaluate(async () => {
@@ -87,6 +106,7 @@ async function login(page, admin = false) {
                 viewport,
                 isMobile: device === "mobile",
                 hasTouch: device === "mobile",
+                serviceWorkers: "block",
             });
             const page = await context.newPage();
             const errors = [];
@@ -152,43 +172,47 @@ async function login(page, admin = false) {
             ]);
             const orderURL = page.url();
             await inspect(page, `${device}-payment`);
-            const gatewayRequests = [];
-            // Stub only the bank page. No request to a real merchant or bank is made.
+            let gatewayResponse;
+            // Redirect chains are not intercepted at each URL. Fetch the real
+            // start response without following it, then serve the bank stub.
             await context.route(
-                "https://sandbox.vnpayment.vn/**",
+                (url) =>
+                    url.origin === new URL(baseURL).origin &&
+                    url.pathname.endsWith("/payment/start.php"),
                 async (route) => {
-                    gatewayRequests.push({
-                        url: route.request().url(),
-                        navigation: route.request().isNavigationRequest(),
-                    });
+                    const response = await route.fetch({ maxRedirects: 0 });
+                    gatewayResponse = {
+                        status: response.status(),
+                        location: response.headers().location,
+                    };
                     await route.fulfill({
+                        status: 200,
                         contentType: "text/html",
-                        body: '<html lang="vi"><title>Test gateway</title><h1>VNPay sandbox stub</h1></html>',
+                        body: '<!doctype html><html lang="vi"><meta charset="utf-8"><title>Test gateway</title><h1>VNPay sandbox stub</h1></html>',
                     });
                 },
             );
-            const [redirect] = await Promise.all([
-                page.waitForResponse((response) =>
-                    new URL(response.url()).pathname.endsWith(
-                        "/payment/start.php",
-                    ),
+            await context.route("https://sandbox.vnpayment.vn/**", (route) =>
+                route.abort(),
+            );
+            await Promise.all([
+                page.waitForURL((url) =>
+                    url.pathname.endsWith("/payment/start.php"),
                 ),
-                page.waitForURL("https://sandbox.vnpayment.vn/**"),
                 page.locator(".payment-start-form button").click(),
             ]);
-            // Read the document URL: a later favicon request must not replace it.
-            const gatewayURL = page.url();
+            await page
+                .getByRole("heading", { name: "VNPay sandbox stub" })
+                .waitFor();
             fs.writeFileSync(
                 `test-results/${device}-gateway-debug.json`,
-                JSON.stringify(
-                    {
-                        status: redirect.status(),
-                        location: await redirect.headerValue("location"),
-                        documentURL: gatewayURL,
-                        gatewayRequests,
-                    },
-                    null,
-                    2,
+                JSON.stringify(gatewayResponse, null, 2),
+            );
+            assert.equal(gatewayResponse.status, 303);
+            const gatewayURL = gatewayResponse.location;
+            assert(
+                gatewayURL.startsWith(
+                    "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?",
                 ),
             );
             const provider = new URL(gatewayURL).searchParams;
@@ -197,6 +221,12 @@ async function login(page, admin = false) {
             assert.equal(
                 Number(provider.get("vnp_Amount")),
                 expectedPrice * 100,
+            );
+            const requestParams = Object.fromEntries(provider);
+            delete requestParams.vnp_SecureHash;
+            assert.equal(
+                provider.get("vnp_SecureHash"),
+                signParams(requestParams),
             );
             await page.goBack();
             await page.locator(".payment-start-form button").waitFor();
@@ -225,17 +255,7 @@ async function login(page, admin = false) {
                     .format(new Date())
                     .replace(/\D/g, ""),
             };
-            const encoded = Object.keys(callback)
-                .sort()
-                .map(
-                    (key) =>
-                        `${encodeURIComponent(key)}=${encodeURIComponent(callback[key]).replace(/%20/g, "+")}`,
-                )
-                .join("&");
-            callback.vnp_SecureHash = crypto
-                .createHmac("sha512", "test-only-vnpay-signing-secret")
-                .update(encoded)
-                .digest("hex");
+            callback.vnp_SecureHash = signParams(callback);
             const ipn = await context.request.get(
                 `${baseURL}/payment/ipn.php?${new URLSearchParams(callback)}`,
             );
