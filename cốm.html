@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- EFFECT -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <!-- ICON -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+        integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+        crossorigin="anonymous" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: black;
+            background-color: rgb(255, 251, 251);
+            letter-spacing: 1px;
+            padding-top: 100px;
+            /* CHỈNH SỬA: Tăng độ đệm an toàn để nội dung không bị header che */
+        }
+
+        /* linehover */
+
+        .line.active::after {
+            width: 100%;
+        }
+
+        .line::after {
+            content: '';
+            width: 0;
+            height: 3px;
+            background: linear-gradient(to right, #fbbd61, #fe5e01);
+            display: block;
+            box-shadow: 0 0 20px 0 #fbbd61;
+            transition: all 0.5s;
+        }
+
+        .line:hover::after {
+            width: 100%;
+        }
+
+        .section {
+            padding: 75px 0;
+        }
+
+        /* HEADER */
+        header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom: 2px solid rgb(0, 0, 0, 0.2);
+
+
+        }
+        #navbarSupportedContent .navbar-nav .nav-item .nav-link {
+            color: black;
+           
+            font-weight: 500;
+            font-size: 17px;
+
+        }
+
+        #navbarSupportedContent .navbar-nav {
+            border-bottom: 2px solid rgb(0, 0, 0, 0.2);
+            margin-left: 100px;
+        }
+
+        #navbarSupportedContent .navbar-nav .nav-link:hover {
+            color: #fe5e01;
+
+        }
+
+        #navbarSupportedContent .navbar-nav .nav-item.active .nav-link {
+            color: #fe5e01;
+
+        }
+
+        #navbarSupportedContent .navbar-nav .nav-link {
+            font-size: 16px;
+            letter-spacing: 2px;
+            font-weight: 500;
+            padding: 5px 12px;
+            color: black;
+            /* CHỈNH SỬA: Đảm bảo màu chữ là đen */
+        }
+
+        .searchbox {
+            display: flex;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .searchbox input {
+            border: none;
+            padding: 5px 10px;
+            outline: none;
+        }
+
+        .searchbox button {
+            background-color: white;
+            border: none;
+            cursor: pointer;
+            padding: 0 10px;
+        }
+
+        .user {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 15px;
+            border: 1px solid black;
+            border-radius: 25px;
+            background-color: white;
+        }
+
+        .user a {
+            text-decoration: none;
+            color: black;
+        }
+
+        .user button {
+            border: none;
+            background-color: white;
+        }
+
+        /* NEWS */
+        .news{
+            margin-top: 50px;
+        }
+        .container {
+            width: 75%;
+            margin: auto;
+            padding: 20px 0;
+
+        }
+
+        .breadcrumb {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .breadcrumb a{
+            text-decoration: none;
+            color: #666;
+            margin-right: 10px;
+        }
+        a:hover{
+            color: rgb(68, 68, 227);
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .actions button {
+            padding: 6px 12px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .like-btn {
+            background: #1877f2;
+            color: white;
+        }
+
+        .share-btn {
+            background: #4267b2;
+            color: white;
+        }
+
+        .views {
+            font-size: 14px;
+            color: #444;
+        }
+
+        .main-img {
+            
+            width: 100%;
+            border-radius: 6px;
+            margin: 20px ;
+            max-width: 500px;
+           
+        }
+        .imgcom{
+            width: 50%;
+            margin: 0 auto;
+        }
+    
+        .related-title {
+            margin-top: 40px;
+            font-size: 20px;
+            color: #0a4abf;
+            border-left: 4px solid #0a4abf;
+            padding-left: 8px;
+        }
+
+        .related-news {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .news-card {
+            
+            padding: 10px;
+            transition: 0.2s;
+        }
+
+        .news-card img {
+            width: 100%;
+        }
+
+        .news-card:hover {
+            cursor: pointer;
+            transform: translateY(-3px);
+        }
+
+        .news-card p {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* FOOTER*/
+        footer {
+            background-color: #101010;
+        }
+
+        footer h3 {
+            font-size: 16px;
+            color: #ec7532;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        footer li {
+            list-style: none;
+        }
+
+        footer a {
+            font-size: 13px;
+            color: white;
+            text-decoration: none;
+            letter-spacing: 1.5px;
+            padding: 3px 0;
+            transition: 0.5s;
+        }
+
+        footer a:hover {
+            color: #fbbd61;
+            text-decoration: none;
+        }
+
+        .footer__copyright {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 15px 0;
+        }
+
+        .footer__copyright p {
+            margin-bottom: 0;
+        }
+    </style>
+
+
+<body>
+    <!-- HEADER -->
+    <header class="container" id="Home">
+        <nav class="navbar navbar-expand-lg  ">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <img src="./hinh/galaxy-logo-mobile.074abeac.png" alt="logo" style="width: 150px;">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon">
+                        <i class="fa fa-bars"></i>
+                    </span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item line active">
+                            <a class="nav-link  " href="./Galaxy.html">Home</a>
+                        </li>
+                        <li class="nav-item line">
+                            <a class="nav-link" href="/datve.html">Đặt Vé</a>
+                        </li>
+                        <li class="nav-item line ">
+                            <a class="nav-link " href="#">Phim</a>
+                        </li>
+                        <li class="nav-item line">
+                            <a class="nav-link" href="#tinmoi">Tin Mới&Ưu Đãi</a>
+                        </li>
+                    </ul>
+                    <form class="d-flex">
+                        <div class="searchbox mx-3">
+                            <input type="text" placeholder="Tìm phim rạp">
+                            <button><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="user">
+                            <i class="fa fa-user-circle"></i>
+                            <button type="submit"> <a href="/Login_Register.html" class="ionicons ion-ios-contact"> Đăng
+                                    Nhập</a></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <!-- NEWS -->
+  <div class="news">
+    <div class="container">
+
+        <nav class="breadcrumb">
+            <a href="./Galaxy.html">Trang Chủ</a>/ <strong>Bắp Ngọt Vị Cốm - Hương Vị Mùa Thu Hà Nội Giữa Lòng Rạp Chiếu</strong>
+        </nav>
+
+        <h1 class="title">Bắp Ngọt Vị Cốm - Hương Vị Mùa Thu Hà Nội Giữa Lòng Rạp Chiếu</h1>
+        <p class="intro">
+            Nghe đâu đó vừa có vị Bắp cốm, nhưng rạp <strong>Galaxy Cinema</strong> đã thơm lừng mùi cốm từ lâu rồi nè!
+        </p>
+
+      <div class="imgcom">
+          <img src="./hinh/tinmoikhuyenmai/com.jpg" alt="Bắp cốm" class="main-img">
+      </div>
+        <p>
+            Mùa cốm đến sớm không chỉ ở Hà Nội, mà lan tỏa đến các rạp <strong>Galaxy Cinema</strong> trên mọi miền tổ
+            quốc.
+            Nhắc nhẹ các Stars ra rạp đừng quên chọn Bắp vị Cốm để hòa cùng không khí mùa thu Hà Nội man mát nhé!
+        </p>
+
+        <p><strong>Bắp ngọt vị cốm Hà Nội – Có mặt lần đầu tại các cụm rạp Galaxy Cinema toàn quốc.</strong></p>
+
+        <h2 class="related-title">TIN LIÊN QUAN</h2>
+
+        <div class="related-news">
+
+            <div class="news-card">
+                <img src="./hinh/tinmoikhuyenmai/com.jpg">
+                <p>Bắp Ngọt Vị Cốm – Hương Vị Mùa Thu Hà Nội Giữa Lòng Rạp Chiếu</p>
+            </div>
+
+            <div class="news-card">
+                <img src="./hinh/tinmoikhuyenmai/imax-treasure-hunt.jpg">
+                <p>IMAX Treasure Hunt: Khởi Hành - Săn Lùng - Chinh Phục</p>
+            </div>
+
+            <div class="news-card">
+                <img src="./hinh/tinmoikhuyenmai/momo-galaxy.jpg">
+                <p>Galaxy Cinema Và MoMo Tặng Bắp Nước Miễn Phí</p>
+            </div>
+
+            <div class="news-card">
+                <img src="./hinh/tinmoikhuyenmai/zalopay.jpg">
+                <p>Zalopay Giảm Đến 30% Khi Mua Vé Galaxy Cinema</p>
+            </div>
+
+        </div>
+
+    </div>
+    </div>
+   
+    <!-- FOOTER  -->
+    <footer>
+        <div class="container">
+            <div class="row section">
+                <div class="col-12 col-sm-12 col-md-3 col-lg-3 col-xl-3">
+                    <h3>GIỚI THIỆU </h3>
+                    <ul>
+                        <li><a href="#">VỀ CHÚNG TÔI</a></li>
+                        <li><a href="#">THỎA THUẬN SỬ </a></li>
+                        <li><a href="#">CHÍNH SÁCH BẢO </a></li>
+                    </ul>
+                </div>
+                <div class="col-12 col-sm-12 col-md-3 col-lg-3 col-xl-3">
+                    <h3>GÓC ĐIỆN ẢNH </h3>
+                    <ul>
+                        <li><a href="#">THỂ LOẠI PHIM</a></li>
+                        <li><a href="#">BÌNH LUẬN </a></li>
+                        <li><a href="#">BLOG ĐIỆN ẢNH </a></li>
+                        <li><a href="#">PHIM HAY THÁNG</a></li>
+                    </ul>
+                </div>
+                <div class="col-12 col-sm-12 col-md-3 col-lg-3 col-xl-3">
+                    <h3>HỖ TRỢ </h3>
+                    <ul>
+                        <li><a href="#">GÓP Ý</a></li>
+                        <li><a href="#">TUYỂN DỤNG</a></li>
+                        <li><a href="#">FAQ</a></li>
+
+                    </ul>
+                </div>
+                <div class="col-12 col-sm-12 col-md-3 col-lg-3 col-xl-3">
+                    <h3>KẾT NỐI VỚI CHÚNG TÔI</h3>
+                    <ul>
+                        <li><a href="https://www.facebook.com/minhtai.nguyen.75248795?locale=vi_VN"><i
+                                    class="fab fa-facebook-f"></i> Facebook</a></li>
+                        <li><a href="https://www.facebook.com/luu.quoc.an.423103?locale=vi_VN"><i
+                                    class="fab fa-twitter"></i> Twitter</a></li>
+                        <li><a href="https://www.facebook.com/le.kiet.364526?locale=vi_VN"><i
+                                    class="fab fa-google-plus-g"></i> Google +</a></li>
+
+                    </ul>
+                </div>
+            </div>
+
+
+            <!--FOOTER-->
+            <div class="footer__copyright">
+                <p>2025 © kkk</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BSJS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <!-- Thư viện hỗ trợ -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <!-- BS4 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
+        crossorigin="anonymous"></script>
+
+
+
+</body>
+
+</html>

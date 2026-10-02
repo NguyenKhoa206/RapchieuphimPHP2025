@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Vé Xem Phim - Galaxy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+        integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="styleDatVe.css">
+
+</head>
+
+<body>
+    <main class="container py-5">
+
+        <section id="DatVe" class="animate__animated animate__fadeIn">
+            <h2 class="text-center mb-5 fw-bold text-primary">Đặt Vé Nhanh</h2>
+            <div class="row justify-content-center">
+                <div class="col-lg-8 border p-4 rounded shadow-sm bg-light">
+                    <div class="mb-3">
+                        <label for="chonRap" class="form-label fw-bold">1. Chọn Rạp</label>
+                        <select id="chonRap" class="form-select">
+                            <option selected disabled>1. Chọn rạp</option>
+                            <option value="HN">Galaxy Hà Nội</option>
+                            <option value="HCM">Galaxy TP.HCM</option>
+                            <option value="DN">Galaxy Đà Nẵng</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="chonPhim" class="form-label fw-bold">2. Chọn Phim</label>
+                        <select id="chonPhim" class="form-select">
+                            <option selected disabled>2. Chọn phim</option>
+                            <option value="JJK">Chú Thuật Hồi Chiến</option>
+                            <option value="TEEYOD">Tee Yod - Quỷ Ăn Tạng</option>
+                            <option value="MUARED">Mưa Đỏ</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="chonNgay" class="form-label fw-bold">3. Chọn Ngày</label>
+                        <input type="date" id="chonNgay" class="form-control" value="">
+                    </div>
+                    <div class="mb-4">
+                        <label for="chonSuat" class="form-label fw-bold">4. Chọn Suất Chiếu</label>
+                        <select id="chonSuat" class="form-select">
+                            <option selected disabled>4. Chọn suất</option>
+                            <option value="S1">10:00</option>
+                            <option value="S2">14:30</option>
+                            <option value="S3">19:00</option>
+                        </select>
+                    </div>
+                    <button id="btnDatVe" class="btn btn-primary w-100" disabled>Tiếp Tục Chọn Ghế</button>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-5">
+
+        <section id="ChonGhe" class="animate__animated animate__fadeInUp" style="display: none;">
+            <h2 class="text-center mb-4 fw-bold text-uppercase text-success">Chọn Ghế & Thanh Toán</h2>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="screen text-center mb-4 p-2 mx-auto bg-dark text-white rounded-3">
+                        MÀN ẢNH
+                    </div>
+
+                    <div id="seat-map" class="mb-4 text-center">
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-3 mb-4">
+                        <div class="legend-item">
+                            <div class="seat available"></div> <span>Trống</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="seat selected"></div> <span>Đang Chọn</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="seat booked"></div> <span>Đã Đặt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center mt-4">
+                <div class="col-lg-8 border p-4 rounded bg-light">
+                    <h4 class="mb-3 text-primary">Thông tin đặt hàng</h4>
+                    <p>Số ghế: <span id="selectedSeatsCount" class="fw-bold text-danger">0</span></p>
+                    <p>Ghế đã chọn: <span id="selectedSeatsList" class="fw-bold text-danger">Chưa chọn ghế nào</span>
+                    </p>
+
+                    <hr>
+                    <h4 class="text-success">Tổng Cộng: <span id="totalPrice" class="fw-bold">0 VNĐ</span></h4>
+                    <button id="btnThanhToan" class="btn btn-success w-100 mt-3" disabled>Thanh Toán</button>
+                    <button id="btnQuayLai" class="btn btn-secondary w-100 mt-2">Quay Lại</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <script src="scriptDatVe.js"></script>
+</body>
+
+</html>

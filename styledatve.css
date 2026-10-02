@@ -1,0 +1,408 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: black;
+    background-color: rgb(255, 251, 251);
+    letter-spacing: 1px;
+    padding-top: 100px; /* CHỈNH SỬA: Tăng độ đệm an toàn để nội dung không bị header che */
+}
+
+/* linehover */
+
+.line.active::after {
+    width: 100%;
+}
+
+.line::after {
+    content: '';
+    width: 0;
+    height: 3px;
+    background: linear-gradient(to right, #fbbd61, #fe5e01);
+    display: block;
+    box-shadow: 0 0 20px 0 #fbbd61;
+    transition: all 0.5s;
+}
+
+.line:hover::after {
+    width: 100%;
+}
+
+.section {
+    padding: 75px 0;
+}
+
+/* HEADER */
+header{
+    position: absolute; 
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom: 2px solid rgb(0, 0, 0, 0.2);
+
+   
+}
+
+/* Nếu muốn cố định HEADER*/
+/*body {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100; 
+    background-color: rgba(255, 255, 255, 0.95);  
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}*/
+#navbarSupportedContent .navbar-nav .nav-item .nav-link {
+    color: black; /* CHỈNH SỬA: Đổi màu chữ sang đen cho fixed header */
+    font-weight: 500;
+    font-size: 17px;
+
+}
+
+#navbarSupportedContent .navbar-nav {
+    border-bottom: 2px solid rgb(0, 0, 0, 0.2);
+    margin-left: 100px;
+}
+
+#navbarSupportedContent .navbar-nav .nav-link:hover {
+    color: #fe5e01;
+
+}
+
+#navbarSupportedContent .navbar-nav .nav-item.active .nav-link {
+    color: #fe5e01;
+
+}
+
+#navbarSupportedContent .navbar-nav .nav-link {
+   font-size: 16px;
+    letter-spacing: 2px;
+    font-weight: 500;
+    padding: 5px 12px;
+    color: black; /* CHỈNH SỬA: Đảm bảo màu chữ là đen */
+}
+
+.searchbox {
+    display: flex;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.searchbox input {
+    border: none;
+    padding: 5px 10px;
+    outline: none;
+}
+
+.searchbox button {
+    background-color: white;
+    border: none;
+    cursor: pointer;
+    padding: 0 10px;
+}
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 15px;
+    border: 1px solid black;
+    border-radius: 25px;
+    background-color: white;
+}
+
+.user a {
+    text-decoration: none;
+    color: black;
+}
+
+.user button {
+    border: none;
+    background-color: white;
+}
+
+
+/* movie */
+.phim__margin {
+    margin-bottom: 15px;
+}
+
+.title_phim {
+    margin-bottom: 40px;
+    border-bottom: 2px solid rgb(0, 0, 0, 0.2);
+}
+
+.title_phim h3 {
+    border-left: 5px solid #f89053;
+    display: inline;
+    padding: 0px 20px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.title_phim a {
+    text-decoration: none;
+    color: #828282;
+    font-size: 17px;
+    margin: 0 10px;
+    display: inline-block;
+}
+
+.phim__ten p {
+    font-weight: 500;
+    text-align: center;
+
+}
+
+.star {
+    align-items: center;
+    text-align: center;
+}
+
+.phim__ten i {
+    color: #fbbd61;
+
+}
+
+.title_phim a:hover {
+    color: #fbbd61;
+}
+
+.phim__img {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.4s ease;
+}
+
+.phim__img img {
+    display: block;
+    transition: transform 0.4s ease;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+}
+
+.phim__img:hover img {
+    transform: scale(1.05);
+}
+
+.phim__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 2;
+}
+
+.phim__img:hover .phim__overlay {
+    opacity: 1;
+}
+.phim__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    z-index: 3;
+    text-align: center;
+}
+
+.phim__play a {
+    display: inline-block;
+    background: linear-gradient(to right, #ffc369, rgb(250, 167, 90));
+    color: #fff;
+    padding: 10px 20px;
+    margin: 6px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.phim__play a:hover {
+    background: linear-gradient(to right, #feb445, rgb(255, 125, 4));
+    transform: translateY(-2px);
+}
+
+/* Hiệu ứng hover khi rê vào khung ảnh */
+.phim__img:hover .phim__overlay {
+    opacity: 1;
+}
+
+.phim__img:hover .phim__play {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* FOOTER*/
+footer {
+    background-color: #101010;
+}
+
+footer h3 {
+    font-size: 16px;
+    color: #ec7532;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+}
+
+footer li {
+    list-style: none;
+}
+
+footer a {
+    font-size: 13px;
+    color: white;
+    text-decoration: none;
+    letter-spacing: 1.5px;
+    padding: 3px 0;
+    transition: 0.5s;
+}
+
+footer a:hover {
+    color: #fbbd61;
+    text-decoration: none;
+}
+
+.footer__copyright {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 15px 0;
+}
+
+.footer__copyright p {
+    margin-bottom: 0;
+}
+
+/* ===== ĐẶT VÉ NHANH ===== */
+#DatVe {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  margin-top: 40px;
+}
+
+#DatVe select,
+#DatVe input {
+  border: 2px solid #ddd;
+  border-radius: 8px;
+}
+
+#btnDatVe:disabled {
+  background-color: #ccc;
+  border: none;
+}
+
+#btnDatVe:hover:not(:disabled) {
+  background-color: #ff8800;
+  color: #fff;
+}
+
+/* --- 5. SEAT SELECTION STYLES (CHỌN GHẾ) --- */
+
+/* Màn Chiếu */
+#ChonGhe .screen {
+    width: 80%;
+    transform: perspective(1000px) rotateX(-20deg); /* Hiệu ứng màn ảnh 3D */
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Base Ghế */
+.seat {
+    width: 30px;
+    height: 30px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-block;
+    transition: all 0.2s;
+}
+
+/* Ghế Trống (Available) */
+.seat.available {
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+}
+.seat.available:hover {
+    background-color: #d1ecf1; /* Màu xanh nhạt khi hover */
+    transform: scale(1.1);
+}
+
+/* Ghế Đang Chọn (Selected) */
+.seat.selected {
+    background-color: #007bff; /* Màu xanh dương */
+    color: #fff;
+    border: 1px solid #007bff;
+    transform: scale(1.05);
+}
+
+/* Ghế Đã Đặt (Booked) */
+.seat.booked {
+    background-color: #dc3545; /* Màu đỏ */
+    border: 1px solid #dc3545;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Chú thích */
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+.legend-item .seat {
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
+}
+
+/* Hàng Ghế (Row) */
+.seat-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.row-label {
+    font-weight: bold;
+    color: #6c757d;
+    width: 20px; /* Căn chỉnh cho nhãn hàng */
+    margin-right: 10px;
+    text-align: left;
+}
+
+.combo-item {
+    transition: background-color 0.2s;
+}
+
+.combo-item:hover {
+    background-color: #f8f9fa;
+}
+
+.quantity-control .btn {
+    width: 30px;
+}
+
+/* Kiểu cho khu vực đặt vé nói chung */
+#ChonGhe .col-lg-8 {
+    max-width: 800px; /* Giới hạn chiều rộng để dễ nhìn hơn */
+}
+

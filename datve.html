@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang-chu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- EFFECT -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <!-- ICON -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+        integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+        crossorigin="anonymous" />
+    <!-- CSS -->
+    <link rel="stylesheet" href="styledatve.css">
+
+<body>
+    <!-- HEADER -->
+
+    <header class="container" id="Home">
+        <nav class="navbar navbar-expand-lg  ">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="Galaxy.html">
+                    <img src="./hinh/galaxy-logo-mobile.074abeac.png" alt="logo" style="width: 150px;">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon">
+                        <i class="fa fa-bars"></i>
+                    </span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ">
+                        <li class="nav-item line"><a class="nav-link" href="Galaxy.html">Home</a></li>
+                        <li class="nav-item line active"><a class="nav-link" href="#DatVe">Đặt Vé</a></li>
+                        <li class="nav-item line "><a class="nav-link " href="#Phim">Phim</a></li>
+                        <li class="nav-item line"><a class="nav-link" href="#">Tin Mới&Ưu Đãi</a></li>
+                    </ul>
+                    <form class="d-flex">
+                        <div class="searchbox mx-3">
+                            <input type="text" placeholder="Tìm phim rạp">
+                            <button><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="user">
+                            <i class="fa fa-user-circle"></i>
+                            <a href="Login_Register.html" class="ionicons ion-ios-contact"> Đăng Nhập</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ĐẶT VÉ NHANH -->
+    <div>
+        <section id="DatVe" class="container py-5 animate__animated animate__fadeInUp">
+            <h2 class="text-center mb-4 fw-bold text-uppercase text-primary">Đặt Vé Nhanh</h2>
+
+            <div class="row justify-content-center g-3">
+                <!-- 1. Chọn Rạp -->
+                <div class="col-md-2 col-6">
+                    <select class="form-select" id="chonRap">
+                        <option selected disabled>1. Chọn rạp</option>
+                        <option value="galaxy-qt">Galaxy Quang Trung</option>
+                        <option value="galaxy-nd">Galaxy Nguyễn Du</option>
+                        <option value="galaxy-tb">Galaxy Tân Bình</option>
+                    </select>
+                </div>
+
+                <!-- 2. Chọn Phim -->
+                <div class="col-md-3 col-6">
+                    <select class="form-select" id="chonPhim">
+                        <option selected disabled>2. Chọn phim</option>
+                        <option value="jujutsu">Chú Thuật Hồi Chiến</option>
+                        <option value="teeyod">Tee Yod 3: Quỷ Ăn Tạng</option>
+                        <option value="ares">Trò Chơi Ảo Giác: Ares</option>
+                    </select>
+                </div>
+
+                <!-- 3. Chọn Ngày -->
+                <div class="col-md-2 col-6">
+                    <input type="date" class="form-control" id="chonNgay">
+                </div>
+
+                <!-- 4. Chọn Suất -->
+                <div class="col-md-2 col-6">
+                    <select class="form-select" id="chonSuat">
+                        <option selected disabled>4. Chọn suất</option>
+                        <option value="10h">10:00</option>
+                        <option value="13h">13:00</option>
+                        <option value="18h">18:00</option>
+                        <option value="21h">21:00</option>
+                    </select>
+                </div>
+
+                <!-- Nút đặt vé -->
+                <div class="col-md-2 text-center">
+                    <button id="btnDatVe" class="btn btn-warning w-100 fw-bold" disabled>Đặt Ngay</button>
+                </div>
+            </div>
+    </div>
+    <!-- MOVIE-->
+    <section class="phimmoi section">
+        <div class="container">
+            <div class="title_phim" id="Phim">
+                <h3> Phim Đang Chiếu</h3>
+            </div>
+            <div class="phim_content">
+                <div class="row">
+                    <div class="col-6 col-md-3">
+                        <div class="phim__img">
+                            <div class="phim__margin">
+                                <img class="img-fluid" src="./hinh/jujutsu-kaisen-500_1759216418459.jpg" alt="">
+                                <div class="phim__play">
+                                    <div>
+                                        <a href="#"> Trailer<i class="fa fa-play"></i></a>
+                                        <a href="#">Mua Vé<i class="fa fa-ticket-alt"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="phim__ten mb-3 mb-md-0">
+                                <p>Chú Thuật Hồi Chiến: Hoài Ngọc / Ngọc Chiết</p>
+                                <a href="move1.html" style="text-decoration: none; color: inherit;"></a>
+                                <div class="star">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="col-6 col-sm-6 col-md-3 col-lg-3 col-xl-3">
+                        <div class="phim__img">
+                            <div class="phim__margin">
+                                <img class="img-fluid" src="./hinh/teeyod-3-500_1759482319151.jpg" alt="">
+                                <div class="phim__play">
+                                    <div>
+                                        <a href="#"> Trailer<i class="fa fa-play"></i></a>
+                                        <a href="#">Mua Vé<i class="fa fa-ticket-alt"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="phim__ten mb-3 mb-md-0">
+                                <p>Tee Yod :Quỷ ăn tạng 3</p>
+                                <div class="star">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="col-6 col-sm-6 col-md-3 col-lg-3 col-xl-3">
+                        <div class="phim__img">
+                            <div class="phim__margin">
+                                <img class="img-fluid" src="./hinh/tron-ares-500_1760067381479.jpg" alt="">
+
+                                <div class="phim__play">
+                                    <div>
+                                        <a href="#"> Trailer<i class="fa fa-play"></i></a>
+                                        <a href="#">Mua Vé<i class="fa fa-ticket-alt"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="phim__ten mb-3 mb-md-0">
+                                <p>Trò Chơi Ảo Giác: Ares</p>
+                                <div class="star">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="col-6 col-sm-6 col-md-3 col-lg-3 col-xl-3">
+                        <div class="phim__img">
+                            <div class="phim__margin">
+                                <img class="img-fluid" src="./hinh/predator-500_1757409424970.jpg" alt="">
+
+
+                                <div class="phim__play">
+                                    <div>
+                                        <a href="#"> Trailer<i class="fa fa-play"></i></a>
+                                        <a href="#">Mua Vé<i class="fa fa-ticket-alt"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="phim__ten mb-3 mb-md-0">
+                                <p> Quái Thú Vô Hình: Vùng Đất Chết Chóc</p>
+                                <div class="star">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <!-- PHIM SAP CHIEU -->
+    <section class="phimmoi section">
+        <div class="container">
+            <div class="title_phim" id="phimsapchieu">
+                <h3> Phim Sắp Chiếu</h3>
+            </div>
+            <div class="phim_content">
+                <div class="row">
+                    <div class="col-6 col-md-3">
+                        <div class="phim__img">
+                            <div class="phim__margin">
+                                <img class="img-fluid" src="./hinh/avatar-3-500_1753848148849.jpg" alt="">
+
+                                <div class="phim__play">
+                                    <div>
+                                        <a href="#"> Trailer<i class="fa fa-play"></i></a>
+                                        <a href="#">Mua Vé<i class="fa fa-ticket-alt"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="phim__ten mb-3 mb-md-0">
+                                <p>Avatar:Lửa Và Tro Tàn</p>
+                                <div class="star">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="col-6 col-sm-6 col-md-3 col-lg-3 col-xl-3">
+                        <div class="phim__img">
+                            <div class="phim__margin">
+                                <img class="img-fluid" src="./hinh/cai-ma-500_1759896037342.jpg" alt="">
+
+                                <div class="phim__play">
+                                    <div>
+                                        <a href="#"> Trailer<i class="fa fa-play"></i></a>
+                                        <a href="#">Mua Vé<i class="fa fa-ticket-alt"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="phim__ten mb-3 mb-md-0">
+                                <p>Cải Mả</p>
+                                <div class="star">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="col-6 col-sm-6 col-md-3 col-lg-3 col-xl-3">
+                        <div class="phim__img">
+                            <div class="phim__margin">
+                                <img class="img-fluid" src="./hinh/xa-thuat-tieu-tam-500_1760511970350.jpg" alt="">
+                                <div class="phim__play">
+                                    <div>
+                                        <a href="#"> Trailer<i class="fa fa-play"></i></a>
+                                        <a href="#">Mua Vé<i class="fa fa-ticket-alt"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="phim__ten mb-3 mb-md-0">
+                                <p>Xà Thuật Tiểu Tam</p>
+                                <div class="star">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="col-6 col-sm-6 col-md-3 col-lg-3 col-xl-3">
+                        <div class="phim__img">
+                            <div class="phim__margin">
+                                <img class="img-fluid" src="./hinh/shinchan-500_1754281110224.jpg" alt="">
+
+                                <div class="phim__play">
+                                    <div>
+                                        <a href="#">Trailer <i class="fa fa-play"></i></a>
+                                        <a href="#">Mua Vé<i class="fa fa-ticket-alt"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="phim__ten mb-3 mb-md-0">
+                                <p> Phim Shin Cậu Bé Bút Chì: Nóng Bỏng Tay! Những Vũ Công Siêu Cay Kasukabe</p>
+                                <div class="star">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <!-- FOOTER  -->
+    <footer>
+        <div class="container">
+            <div class="row section">
+                <div class="col-12 col-sm-12 col-md-3 col-lg-3 col-xl-3">
+                    <h3>GIỚI THIỆU </h3>
+                    <ul>
+                        <li><a href="#">VỀ CHÚNG TÔI</a></li>
+                        <li><a href="#">THỎA THUẬN SỬ </a></li>
+                        <li><a href="#">CHÍNH SÁCH BẢO </a></li>
+                    </ul>
+                </div>
+                <div class="col-12 col-sm-12 col-md-3 col-lg-3 col-xl-3">
+                    <h3>GÓC ĐIỆN ẢNH </h3>
+                    <ul>
+                        <li><a href="#">THỂ LOẠI PHIM</a></li>
+                        <li><a href="#">BÌNH LUẬN </a></li>
+                        <li><a href="#">BLOG ĐIỆN ẢNH </a></li>
+                        <li><a href="#">PHIM HAY THÁNG</a></li>
+                    </ul>
+                </div>
+                <div class="col-12 col-sm-12 col-md-3 col-lg-3 col-xl-3">
+                    <h3>HỖ TRỢ </h3>
+                    <ul>
+                        <li><a href="#">GÓP Ý</a></li>
+                        <li><a href="#">TUYỂN DỤNG</a></li>
+                        <li><a href="#">FAQ</a></li>
+
+                    </ul>
+                </div>
+                <div class="col-12 col-sm-12 col-md-3 col-lg-3 col-xl-3">
+                    <h3>KẾT NỐI VỚI CHÚNG TÔI</h3>
+                    <ul>
+                        <li><a href="https://www.facebook.com/minhtai.nguyen.75248795?locale=vi_VN"><i
+                                    class="fab fa-facebook-f"></i> Facebook</a></li>
+                        <li><a href="https://www.facebook.com/luu.quoc.an.423103?locale=vi_VN"><i
+                                    class="fab fa-twitter"></i> Twitter</a></li>
+                        <li><a href="https://www.facebook.com/le.kiet.364526?locale=vi_VN"><i
+                                    class="fab fa-google-plus-g"></i> Google +</a></li>
+
+                    </ul>
+                </div>
+            </div>
+
+
+            <!--FOOTER-->
+            <div class="footer__copyright">
+                <p>2025 © kkk</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="scriptDatVe.js"></script>
+</body>
+
+</html>

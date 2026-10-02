@@ -1,0 +1,273 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    /* Đảm bảo nội dung bắt đầu sau Header */
+    padding-top: 80px; /* Điều chỉnh giá trị này tùy theo chiều cao thực tế của Header */
+    font-family: Arial, Helvetica, sans-serif;
+    color: black;
+    background-color: rgb(226, 226, 226);
+    letter-spacing: 1px;
+}
+
+/* GLOBAL STYLES */
+
+.section {
+    padding: 75px 0;
+}
+
+/* Line Hover Effect (Dành cho Menu/Title) */
+.line.active::after {
+    width: 100%;
+}
+
+.line::after {
+    content: '';
+    width: 0;
+    height: 3px;
+    background: linear-gradient(to right, #fbbd61, #fe5e01);
+    display: block;
+    box-shadow: 0 0 20px 0 #fbbd61;
+    transition: all 0.5s;
+}
+
+.line:hover::after {
+    width: 100%;
+}
+
+/* HEADER */
+header {
+    position: fixed; /* Đặt là fixed để nó luôn ở trên cùng màn hình */
+    top: 0;          /* Đặt sát cạnh trên */
+    left: 0;
+    width: 100%;     /* Chiều rộng tối đa */
+    z-index: 1000;   /* Đảm bảo nó luôn nằm trên các thành phần khác */
+    background-color: rgba(0, 0, 0, 0.8); /* Thêm nền đen mờ cho Header */
+    /* Loại bỏ transform: translateX(-50%); vì đã đặt left: 0 và width: 100% */
+}
+
+/* Chỉnh sửa Navbar items */
+#movieNavBar .navbar-nav .nav-item .nav-link {
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    padding: 10px 15px; /* Giảm padding để gọn gàng hơn */
+}
+
+/* Movie section - Banner placeholder */
+.movie-banner {
+    height: 400px; /* Chiều cao banner */
+    background: url('./hinh/movie-placeholder.jpg') center/cover no-repeat;
+    position: relative;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.movie-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Lớp phủ đen */
+}
+
+.banner-content {
+    z-index: 5;
+}
+
+.banner-content h1 {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #fbbd61;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* MOVIE GRID */
+
+.movie-grid {
+    padding: 50px 0;
+}
+
+.movie-card {
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    margin-bottom: 30px;
+}
+
+.movie-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.movie-card__img {
+    position: relative;
+    overflow: hidden;
+}
+
+.movie-card__img img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.5s;
+}
+
+.movie-card:hover .movie-card__img img {
+    transform: scale(1.05);
+}
+
+.movie-card__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.movie-card:hover .movie-card__overlay {
+    opacity: 1;
+}
+
+.movie-card__overlay a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    margin: 0 10px;
+    padding: 8px 15px;
+    border: 1px solid white;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.movie-card__overlay a:hover {
+    background-color: #fbbd61;
+    color: #333;
+    border-color: #fbbd61;
+}
+
+.movie-card__info {
+    padding: 15px;
+    text-align: center;
+}
+
+.movie-card__info h4 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    height: 45px; /* Chiều cao cố định cho tên phim */
+    overflow: hidden;
+}
+
+.movie-card__info .star i {
+    color: #fbbd61;
+    font-size: 14px;
+}
+
+/* FOOTER */
+footer {
+    background-color: #212529; /* Màu nền tối cho footer */
+    color: white;
+    padding-top: 50px;
+}
+
+footer h3 {
+    font-size: 18px;
+    color: #fbbd61;
+    margin-bottom: 20px;
+}
+
+footer ul {
+    list-style: none;
+    padding: 0;
+}
+
+footer a {
+    font-size: 13px;
+    color: white;
+    text-decoration: none;
+    letter-spacing: 1.5px;
+    padding: 3px 0;
+    transition: 0.5s;
+    display: block;
+}
+
+footer a:hover {
+    color: #fbbd61;
+    text-decoration: none;
+}
+
+.footer__copyright {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 15px 0;
+    text-align: center;
+}
+
+.footer__copyright p {
+    margin-bottom: 0;
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 991.98px) {
+    /* HEADER */
+    header {
+        position: static;
+        transform: none;
+        background-color: #333; /* Header cố định trên mobile */
+    }
+
+    header .navbar-brand {
+        max-width: 180px;
+    }
+
+    /* Menu mobile */
+    #navbarSupportedContent {
+        background-color: #333;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+
+    #movieNavBar .navbar-nav .nav-link {
+        padding: 10px 0;
+        text-align: center;
+    }
+}
+
+@media screen and (max-width: 767.98px) {
+    /* GLOBAL */
+    .section {
+        padding: 50px 0;
+    }
+
+    /* Ghế trong Phim.html không cần thiết */
+
+    /* Footer */
+    footer h3 {
+        margin-top: 20px;
+    }
+}
+
+@media screen and (max-width: 575.98px) {
+    /* Movie Grid */
+    .movie-card__info h4 {
+        height: auto; /* Cho phép tên phim dài hơn */
+    }
+}
