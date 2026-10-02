@@ -1,0 +1,15 @@
+/config/local.php
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/vendor/
+/node_modules/
+/.env
+/.env.*
+*.log
+*.sql.gz
+*.bak
+.DS_Store
+Thumbs.db
+/.php-cs-fixer.cache

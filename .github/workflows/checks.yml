@@ -1,0 +1,70 @@
+name: PHP checks
+
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      database:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: test-only-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASS: test-only-password
+      DB_NAME: cinema_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Install PHP 8.3 extensions
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php8.3-cli php8.3-mysql php8.3-mbstring
+      - name: Check syntax
+        run: |
+          find app config public scripts tests -name '*.php' -print0 | xargs -0 -n1 php -l
+          php -l index.php
+          node --check public/assets/js/app.js
+      - name: Run business and concurrency checks
+        run: |
+          php scripts/install.php
+          php tests/run.php
+          php tests/concurrency.php
+      - name: Check legacy migration
+        env:
+          DB_NAME: cinema_migration_test
+        run: |
+          php scripts/install.php
+          php tests/migration.php
+      - name: Check HTTP flows
+        env:
+          DB_NAME: cinema_http_test
+        run: |
+          php scripts/install.php
+          php scripts/seed.php
+          php -S 127.0.0.1:8000 -t public > /tmp/cinema-php.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8000/ > /dev/null; then break; fi
+            sleep 0.2
+          done
+          php tests/http.php

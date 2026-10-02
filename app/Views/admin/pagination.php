@@ -1,0 +1,1 @@
+<?php if ($count > 20): ?><nav class="pagination" aria-label="Phân trang"><?php for ($p = max(1, $page - 3);$p <= min((int)ceil($count / 20), $page + 3);$p++): ?><a class="<?= $p === $page ? 'active' : '' ?>" href="<?= e(url($path, array_merge($query, ['page' => $p]))) ?>"><?= $p ?></a><?php endfor; ?></nav><?php endif; ?>
