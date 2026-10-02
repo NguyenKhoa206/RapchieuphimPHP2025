@@ -13,7 +13,7 @@ if (D::one("SELECT id FROM cinema_users WHERE email='ui@example.test'")) {
 Auth::register(['name' => 'Người xem thử', 'email' => 'ui@example.test', 'phone' => '0900999001', 'gender' => 2, 'birthday' => '1990-01-01', 'password' => 'UiPassword123!', 'confirmation' => 'UiPassword123!']);
 $user = (int) D::one("SELECT id FROM cinema_users WHERE email='ui@example.test'")['id'];
 D::execute('INSERT INTO cinema_admins (username,name,password_hash) VALUES (?,?,?)', ['uiadmin', 'Quản trị thử', password_hash('UiPassword123!', PASSWORD_DEFAULT)]);
-D::execute('INSERT INTO cinema_history_batches (source_name,mapping_hash,invoice_count,ticket_count) VALUES (?,?,1,1)', ['ui-fixture', hash('sha256', 'ui'), 1]);
+D::execute('INSERT INTO cinema_history_batches (source_name,mapping_hash,invoice_count,ticket_count) VALUES (?,?,1,1)', ['ui-fixture', hash('sha256', 'ui')]);
 $batch = (int) db()->lastInsertId();
 D::execute('INSERT INTO cinema_legacy_invoices (source_name,source_key,source_hash,batch_id,user_id,issued_at,amount,original_status,raw_data) VALUES (?,?,?,?,?,?,?,?,?)', ['ui-fixture', 'HD2025-001', hash('sha256', 'ui-invoice'), $batch, $user, '2025-10-01 18:00:00', 180000, 'Trạng thái từ hệ thống cũ', '{}']);
 $invoice = (int) db()->lastInsertId();
