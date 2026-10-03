@@ -333,8 +333,9 @@ textarea {
 .carousel-dots {
     position: absolute;
     bottom: 28px;
-    left: 0;
-    right: 0;
+    left: 50%;
+    width: max-content;
+    transform: translateX(-50%);
     display: flex;
     justify-content: center;
     gap: 4px;
