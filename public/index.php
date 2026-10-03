@@ -4,17 +4,14 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/app/bootstrap.php';
 
 use App\Services\CinemaService;
+use App\Services\NewsService;
 
 $search = trim(is_string($_GET['q'] ?? null) ? mb_substr($_GET['q'], 0, 120) : '');
 $status = in_array($_GET['status'] ?? 'showing', ['showing', 'upcoming', 'all'], true) ? ($_GET['status'] ?? 'showing') : 'showing';
 $result = CinemaService::movies($search, $status, max(1, (int) ($_GET['page'] ?? 1)));
 $featured = array_slice($result['items'], 0, 3);
-$promotions = [
-    ['com.jpg', 'Bắp ngọt vị cốm'],
-    ['happyday.jpg', 'Ngày hội điện ảnh Happy Day'],
-    ['snack.jpg', 'Bắp nước & món ăn nhẹ'],
-    ['thanhvien.jpg', 'Thành viên Galaxy'],
-];
+$upcoming = $status === 'showing' && $search === '' ? CinemaService::movies('', 'upcoming') : null;
+$articles = NewsService::latest();
 view('layouts/header', ['title' => 'Khám phá phim', 'homePage' => true]);
 ?>
 <h1 class="sr-only">Galaxy Cinema · Phim & lịch chiếu</h1>
@@ -28,6 +25,7 @@ view('layouts/header', ['title' => 'Khám phá phim', 'homePage' => true]);
             <h2><?= e($film['title']) ?></h2>
             <p><?= e(mb_strimwidth($film['description'] ?? '', 0, 190, '…')) ?></p>
             <a class="button carousel-book" href="<?= e(url('movie.php', ['id' => $film['id']])) ?>"><?= icon('ticket') ?><?= strtotime($film['release_date']) > strtotime('today') ? 'Xem chi tiết' : 'Đặt vé ngay' ?></a>
+            <?php if ($film['trailer']): ?><a class="button carousel-trailer" href="<?= e(url('movie.php', ['id' => $film['id']])) ?>#trailer"><?= icon('play') ?>Trailer</a><?php endif; ?>
         </div>
     </article>
     <?php endforeach; ?>
@@ -57,34 +55,28 @@ view('layouts/header', ['title' => 'Khám phá phim', 'homePage' => true]);
     </div>
     <?php if ($search !== ''): ?><p class="search-result">Kết quả cho “<?= e($search) ?>” <a href="<?= e(url('index.php', ['status' => $status])) ?>#movies">Xóa tìm kiếm</a></p><?php endif; ?>
     <div class="movie-grid">
-    <?php foreach ($result['items'] as $movie): ?>
-        <article class="movie-card">
-            <a class="poster-link" href="<?= e(url('movie.php', ['id' => $movie['id']])) ?>">
-                <img loading="lazy" decoding="async" width="300" height="430" src="<?= e(image_url($movie['poster'])) ?>" alt="<?= e($movie['title']) ?>">
-                <span class="age-badge"><?= $movie['age_rating'] ? 'T' . (int) $movie['age_rating'] : 'P' ?></span>
-                <span class="poster-cta"><?= icon('ticket') ?>Xem lịch & đặt vé</span>
-            </a>
-            <div class="movie-card-copy">
-                <p class="movie-meta"><?= e($movie['genre']) ?> <span>·</span> <?= (int) $movie['duration'] ?> phút</p>
-                <h3><a href="<?= e(url('movie.php', ['id' => $movie['id']])) ?>"><?= e($movie['title']) ?></a></h3>
-                <p class="movie-release">Khởi chiếu: <?= date('d/m/Y', strtotime($movie['release_date'])) ?></p>
-                <a class="button button-outline button-small" href="<?= e(url('movie.php', ['id' => $movie['id']])) ?>"><?= icon('ticket') ?><?= $status === 'upcoming' ? 'Xem chi tiết' : 'Đặt vé' ?></a>
-            </div>
-        </article>
-    <?php endforeach; ?>
+    <?php foreach ($result['items'] as $movie): ?><?php view('movies/card', ['movie' => $movie]); ?><?php endforeach; ?>
     </div>
     <?php if (!$result['items']): ?><div class="empty-state"><span class="empty-icon"><?= icon('search') ?></span><h3>Chưa tìm thấy phim</h3><p>Thử đổi từ khóa hoặc chọn danh mục khác.</p><a class="button button-outline" href="<?= e(url('index.php', ['status' => 'all'])) ?>">Xem tất cả phim</a></div><?php endif; ?>
     <?php if ($result['total'] > 12): ?><nav class="pagination" aria-label="Phân trang"><?php for ($page = 1; $page <= ceil($result['total'] / 12); $page++): ?><a class="<?= $page === $result['page'] ? 'active' : '' ?>" href="<?= e(url('index.php', ['q' => $search, 'status' => $status, 'page' => $page])) ?>#movies"><?= $page ?></a><?php endfor; ?></nav><?php endif; ?>
 </section>
+<?php if ($upcoming && $upcoming['items']): ?>
+<section class="container upcoming-catalog section" id="phimsapchieu">
+    <div class="section-heading"><h2>PHIM SẮP CHIẾU</h2><a class="news-all-link" href="<?= e(url('index.php', ['status' => 'upcoming'])) ?>#movies">Xem tất cả<?= icon('arrow') ?></a></div>
+    <div class="movie-grid"><?php foreach (array_slice($upcoming['items'], 0, 4) as $movie): ?><?php view('movies/card', ['movie' => $movie]); ?><?php endforeach; ?></div>
+</section>
+<?php endif; ?>
 <section class="promotions section" id="tinmoi">
     <div class="container">
-        <div class="section-heading"><h2>TIN MỚI & ƯU ĐÃI</h2></div>
-        <p class="muted">Hình ảnh giới thiệu. Vui lòng hỏi rạp về thời gian và điều kiện áp dụng.</p>
-        <div class="promotion-grid">
-            <?php foreach ($promotions as [$file, $label]): ?>
-            <article class="promotion-card"><img loading="lazy" decoding="async" width="400" height="267" src="<?= e(url('assets/images/tinmoikhuyenmai/' . $file)) ?>" alt="<?= e($label) ?>"><h3><?= e($label) ?></h3></article>
-            <?php endforeach; ?>
+        <div class="section-heading"><h2>TIN MỚI & ƯU ĐÃI</h2><a class="news-all-link" href="<?= e(url('news.php')) ?>">Xem tất cả<?= icon('arrow') ?></a></div>
+        <?php if ($articles): ?>
+        <div class="news-slider" data-news-slider>
+            <div class="news-track" id="news-track" tabindex="0" role="region" aria-label="Danh sách tin. Vuốt hoặc cuộn ngang để xem bài khác.">
+                <?php foreach ($articles as $article): ?><?php view('news/card', ['article' => $article]); ?><?php endforeach; ?>
+            </div>
+            <div class="news-slider-controls" data-news-controls hidden><button class="button button-outline button-small" type="button" data-news-prev aria-controls="news-track" aria-label="Bài trước"><?= icon('chevron-left') ?></button><span class="muted" data-news-position role="status" aria-live="polite"></span><button class="button button-outline button-small" type="button" data-news-next aria-controls="news-track" aria-label="Bài tiếp theo"><?= icon('chevron-right') ?></button></div>
         </div>
+        <?php else: ?><div class="empty-state"><h3>Chưa có tin mới</h3><p>Tin mới và các chương trình tại rạp sẽ được cập nhật tại đây.</p></div><?php endif; ?>
     </div>
 </section>
 <?php view('layouts/footer'); ?>

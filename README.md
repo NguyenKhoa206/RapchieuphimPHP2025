@@ -2,7 +2,7 @@
 
 Ứng dụng PHP/MySQL quản lý phim, rạp, phòng, lịch chiếu, đặt ghế, combo, thanh toán VNPay, lịch sử hóa đơn/vé và doanh thu. Bản này gom phần xử lý dùng chung, bỏ các trang HTML/file `copy` trùng lặp, và bổ sung luồng đặt vé lưu vào CSDL.
 
-Giao diện giữ phong cách nhánh `main` cũ: logo Galaxy, header trắng, banner phim lớn, tab gạch cam, poster bốn cột và footer đen. `public/assets/css/app.css` chứa thành phần dùng chung; `classic.css` chứa màu sắc/bố cục theo bản cũ. Banner chuyển thủ công bằng nút hoặc bàn phím, lấy phim từ danh mục hiện tại. Các ảnh ưu đãi chỉ là nội dung giới thiệu, không xác nhận chương trình đang còn hiệu lực.
+Giao diện giữ phong cách nhánh `main` cũ: logo Galaxy, header trắng, banner phim lớn, tab gạch cam, poster bốn cột, nhóm phim sắp chiếu và footer đen. `public/assets/css/app.css` chứa thành phần dùng chung; `classic.css` chứa màu sắc/bố cục theo bản cũ. Tin/ưu đãi lấy từ CSDL, có thể vuốt/cuộn ngang, dùng nút hoặc bàn phím để xem bài khác; mỗi thẻ mở trang đọc bài. Các bài mẫu có nhãn minh họa và không xác nhận ưu đãi đang áp dụng.
 
 ## Yêu cầu
 
@@ -20,6 +20,7 @@ Giao diện giữ phong cách nhánh `main` cũ: logo Galaxy, header trắng, ba
 ```bash
 php scripts/install.php
 php scripts/seed.php
+php scripts/seed-content.php
 php scripts/create-admin.php admin
 php -S 127.0.0.1:8000 -t public
 ```
@@ -29,6 +30,23 @@ Lệnh tạo admin yêu cầu nhập mật khẩu trong terminal; không có tà
 Mở `http://127.0.0.1:8000/`; quản trị tại `/admin/login.php`. Đăng ký tài khoản khách hàng trên giao diện. Dữ liệu seed dùng lịch tương đối trong 3 ngày tới; không phải lịch chiếu, thời lượng hay giá thực tế.
 
 **XAMPP trên Windows:** đặt dự án trong `htdocs`, bật MySQL và Apache. Nếu `php` chưa có trong PATH, dùng `C:\xampp\php\php.exe` thay cho `php` trong các lệnh trên. Truy cập `http://localhost/RapchieuphimPHP2025/public/`. Đường dẫn tự nhận diện thư mục con; có thể đặt `base_path` trong `config/local.php` nếu dùng reverse proxy. Apache cần `AllowOverride All` để đọc `.htaccess`. PHP development server chỉ chạy với `-t public`.
+
+## Cập nhật tin mới & ưu đãi
+
+Nếu đã chạy bản mới trước đây, cập nhật mã nguồn, giữ `config/local.php` và `storage/uploads/`, rồi chạy lại `php scripts/install.php` để thêm bảng `cinema_news`. Lệnh này không xóa các bảng hoặc dữ liệu đang có.
+
+Trong admin, chọn **Tin & ưu đãi → Thêm bài viết**: nhập tiêu đề, mô tả/nội dung, tải ảnh hoặc chọn ảnh có sẵn, rồi chọn **Đăng công khai** và lưu. Bài xuất hiện trên trang chủ và `/news.php`. Có thể lưu bản nháp, hẹn giờ bằng thời gian đăng, đặt thời gian hết hạn hoặc ẩn bài. Bài nháp/ẩn/chưa tới giờ/hết hạn không hiển thị công khai. Nội dung là văn bản thuần, không thực thi HTML.
+
+Để bổ sung các phim/ảnh minh họa còn thiếu từ main cũ mà không ghi đè phim, lịch chiếu hoặc bài đã sửa:
+
+```bat
+"C:\xampp\php\php.exe" scripts\install.php
+"C:\xampp\php\php.exe" scripts\seed-content.php --include-movies
+```
+
+Chạy từ thư mục dự án. Script chỉ thêm mẫu chưa có, không tự tạo suất chiếu; ngày phát hành/thời lượng/giới hạn tuổi là dữ liệu minh họa. Nếu chỉ cần bài mẫu, bỏ `--include-movies`. Không chạy lại `seed.php` trên CSDL có phim/rạp. Khi cài mới, seed có đủ tám phim của trang mẫu main cũ, gồm bốn đang chiếu và bốn sắp chiếu.
+
+Trong **Phim → Sửa**, có thể tải trailer MP4/WebM hoặc nhập đường dẫn HTTPS YouTube/youtu.be. Trailer tải lên được ưu tiên; đường dẫn YouTube được chuẩn hóa và mở bằng nút riêng. Phim có trailer mới hiện nút Trailer trên poster/banner; phim sắp chiếu mở thông tin thay vì giả lập đặt vé.
 
 ## Chuyển từ bản cũ
 

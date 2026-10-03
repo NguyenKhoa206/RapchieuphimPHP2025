@@ -116,6 +116,63 @@ async function login(page, admin = false) {
             });
             await page.goto("/");
             await inspect(page, `${device}-home`);
+            assert.equal(
+                await page.locator("#movies .movie-card").count(),
+                4,
+                "Missing original showing films",
+            );
+            assert.equal(
+                await page.locator("#phimsapchieu .movie-card").count(),
+                4,
+                "Missing original upcoming films",
+            );
+            const track = page.locator(".news-track");
+            await page.locator("[data-news-next]").click();
+            await page.waitForFunction(
+                () => document.querySelector(".news-track").scrollLeft > 20,
+            );
+            await page.locator("[data-news-prev]").click();
+            await page.waitForFunction(
+                () => document.querySelector(".news-track").scrollLeft < 2,
+            );
+            if (device === "mobile") {
+                await track.scrollIntoViewIfNeeded();
+                const bounds = await track.boundingBox();
+                const session = await context.newCDPSession(page);
+                const start = bounds.x + bounds.width * 0.85;
+                const y = bounds.y + 80;
+                await session.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [{ x: start, y, id: 0 }],
+                });
+                for (let step = 1; step <= 6; step++) {
+                    await session.send("Input.dispatchTouchEvent", {
+                        type: "touchMove",
+                        touchPoints: [
+                            { x: start - step * bounds.width * 0.1, y, id: 0 },
+                        ],
+                    });
+                    await new Promise((resolve) => setTimeout(resolve, 16));
+                }
+                await session.send("Input.dispatchTouchEvent", {
+                    type: "touchEnd",
+                    touchPoints: [],
+                });
+                await session.detach();
+                await page.waitForFunction(
+                    () => document.querySelector(".news-track").scrollLeft > 20,
+                );
+            }
+            await track.focus();
+            await page.keyboard.press("ArrowRight");
+            await page.waitForFunction(
+                () => document.querySelector(".news-track").scrollLeft > 20,
+            );
+            await page.locator(".news-card h3").first().click();
+            await inspect(page, `${device}-news-detail`);
+            await page.goto("/news.php");
+            await inspect(page, `${device}-news-list`);
+            await page.goto("/");
             if (device === "desktop") {
                 for (const width of [320, 768, 900, 1024]) {
                     await page.setViewportSize({ width, height: 960 });
@@ -159,10 +216,12 @@ async function login(page, admin = false) {
                 assert.equal(await menu.getAttribute("aria-expanded"), "false");
                 await menu.click();
             }
-            await page.locator(".header-search input[name=q]").fill("Avatar");
+            await page
+                .locator(".header-search input[name=q]")
+                .fill("Chú Thuật");
             await Promise.all([
                 page.waitForURL(
-                    (url) => url.searchParams.get("q") === "Avatar",
+                    (url) => url.searchParams.get("q") === "Chú Thuật",
                 ),
                 page.locator(".header-search button").click(),
             ]);
@@ -173,6 +232,10 @@ async function login(page, admin = false) {
             );
             await page.locator(".movie-card h3 a").click();
             await inspect(page, `${device}-movie-detail`);
+            assert.equal(
+                await page.locator("#trailer a").getAttribute("href"),
+                "https://www.youtube.com/watch?v=cPs3j9LNCjY",
+            );
             await page.goto("/?q=ui-no-such-film");
             await inspect(page, `${device}-empty-search`);
             assert.equal(await page.locator(".movie-card").count(), 0);
@@ -366,13 +429,87 @@ async function login(page, admin = false) {
             await inspect(page, `${device}-admin-history`);
             await page.goto("/admin/revenue.php?mode=sandbox");
             await inspect(page, `${device}-admin-revenue`);
+            await page.goto("/admin/news.php");
+            await inspect(page, `${device}-admin-news`);
+            await page.goto("/admin/news-edit.php");
+            await inspect(page, `${device}-admin-news-edit`);
+            const headline = `Tin mới kiểm thử ${device}`;
+            await page.locator('[name="title"]').fill(headline);
+            await page
+                .locator('[name="summary"]')
+                .fill("Tin mới được cập nhật từ admin.");
+            await page
+                .locator('[name="body"]')
+                .fill("Dòng thứ nhất.\nĐiều kiện chương trình ở dòng thứ hai.");
+            await page.locator('[name="category"]').selectOption("news");
+            await page.locator('[name="status"]').selectOption("draft");
+            await page
+                .locator('[name="published_at"]')
+                .fill("2026-01-01T10:00");
+            await page
+                .locator('[name="stock_image"]')
+                .selectOption("happyday.jpg");
+            await Promise.all([
+                page.waitForURL((url) => url.searchParams.has("id")),
+                page.locator("[data-news-form] button[type=submit]").click(),
+            ]);
+            const editURL = page.url();
+            const newsId = new URL(editURL).searchParams.get("id");
+            assert.equal(
+                (
+                    await context.request.get(`/news-detail.php?id=${newsId}`)
+                ).status(),
+                404,
+            );
+            await page.locator('[name="status"]').selectOption("published");
+            await Promise.all([
+                page.waitForNavigation(),
+                page.locator("[data-news-form] button[type=submit]").click(),
+            ]);
+            await page.goto(`/news-detail.php?id=${newsId}`);
+            assert.equal(await page.locator("h1").textContent(), headline);
+            await inspect(page, `${device}-published-news`);
+            await page.goto(editURL);
+            await page.locator('[name="title"]').fill(`${headline} đã sửa`);
+            await page
+                .locator('[name="image"]')
+                .setInputFiles(
+                    "public/assets/images/tinmoikhuyenmai/snack.jpg",
+                );
+            await Promise.all([
+                page.waitForNavigation(),
+                page.locator("[data-news-form] button[type=submit]").click(),
+            ]);
+            await page.goto(`/news-detail.php?id=${newsId}`);
+            assert.equal(
+                await page.locator("h1").textContent(),
+                `${headline} đã sửa`,
+            );
+            assert(
+                (
+                    await page.locator(".news-cover").getAttribute("src")
+                ).includes("media.php"),
+            );
+            await page.goto("/admin/news.php");
+            const row = page.locator("tr", { hasText: `${headline} đã sửa` });
+            page.once("dialog", (dialog) => dialog.accept());
+            await Promise.all([
+                page.waitForNavigation(),
+                row.getByRole("button", { name: "Ẩn bài" }).click(),
+            ]);
+            assert.equal(
+                (
+                    await context.request.get(`/news-detail.php?id=${newsId}`)
+                ).status(),
+                404,
+            );
             assert.deepEqual(errors, [], `${device}: browser errors`);
             await context.close();
         }
         const failures = results.filter((result) => result.violations.length);
         assert.equal(failures.length, 0, JSON.stringify(failures));
         console.log(
-            `PASS UI: ${results.length} desktop/mobile pages, carousel, search, checkout, stubbed VNPay/IPN, archive, navigation, accessibility, no browser errors.`,
+            `PASS UI: ${results.length} desktop/mobile pages, movies, news scrolling and admin publish/edit/image/hide, carousel, search, checkout, stubbed VNPay/IPN, archive, navigation, accessibility, no browser errors.`,
         );
     } finally {
         await browser.close();

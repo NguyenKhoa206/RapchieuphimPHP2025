@@ -6,6 +6,8 @@ function icon(string $name): string
 {
     $paths = [
         'film' => '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 3v18M17 3v18M3 8h4m-4 8h4m10-8h4m-4 8h4M7 12h10"/>',
+        'news' => '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h4v4H7zM15 7h2m-2 4h2M7 15h10M7 18h10"/>',
+        'play' => '<path d="m9 5 11 7-11 7z"/>',
         'calendar' => '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 11h18m-14 5h2m4 0h2"/>',
         'ticket' => '<path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4zM15 5v2m0 3v2m0 3v4"/>',
         'grid' => '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',

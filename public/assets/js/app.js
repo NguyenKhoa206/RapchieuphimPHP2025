@@ -71,6 +71,56 @@ document.querySelectorAll("[data-carousel]").forEach((carousel) => {
     );
     controls.hidden = false;
 });
+document.querySelectorAll("[data-news-slider]").forEach((slider) => {
+    const track = slider.querySelector(".news-track");
+    const cards = [...track.querySelectorAll(".news-card")];
+    const previous = slider.querySelector("[data-news-prev]");
+    const next = slider.querySelector("[data-news-next]");
+    const position = slider.querySelector("[data-news-position]");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => {
+        previous.disabled = track.scrollLeft <= 1;
+        next.disabled =
+            track.scrollLeft >= track.scrollWidth - track.clientWidth - 1;
+        const bounds = track.getBoundingClientRect();
+        const visible = cards
+            .map((card, index) => ({
+                bounds: card.getBoundingClientRect(),
+                index,
+            }))
+            .filter(
+                (card) =>
+                    card.bounds.right > bounds.left + 2 &&
+                    card.bounds.left < bounds.right - 2,
+            );
+        if (visible.length)
+            position.textContent = `${visible[0].index + 1}–${visible.at(-1).index + 1} / ${cards.length} bài`;
+    };
+    const move = (direction) => {
+        const step =
+            cards[0].getBoundingClientRect().width +
+            (parseFloat(getComputedStyle(track).columnGap) || 0);
+        track.scrollBy({
+            left: direction * step,
+            behavior: reducedMotion.matches ? "auto" : "smooth",
+        });
+    };
+    previous.addEventListener("click", () => move(-1));
+    next.addEventListener("click", () => move(1));
+    track.addEventListener("scroll", update, { passive: true });
+    track.addEventListener("keydown", (event) => {
+        if (
+            event.target === track &&
+            ["ArrowLeft", "ArrowRight"].includes(event.key)
+        ) {
+            event.preventDefault();
+            move(event.key === "ArrowRight" ? 1 : -1);
+        }
+    });
+    new ResizeObserver(update).observe(track);
+    slider.querySelector("[data-news-controls]").hidden = false;
+    update();
+});
 document.querySelectorAll("[data-confirm]").forEach((button) =>
     button.addEventListener("click", (event) => {
         if (!window.confirm(button.dataset.confirm)) event.preventDefault();

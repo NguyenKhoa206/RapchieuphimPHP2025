@@ -131,14 +131,14 @@ http_check($response['status'] === 303 && D::one('SELECT status FROM cinema_orde
 http_check(str_contains(request($a, '/order.php?id=' . $oid)['body'], 'In thông tin vé'), 'Không xem/in vé paid được.');
 $page = request($admin, '/admin/movie-edit.php');
 $fields = ['csrf' => token($page), 'title' => 'Phim HTTP ' . $phone, 'genre' => 'Kiểm thử', 'age_rating' => 0, 'duration' => 95, 'release_date' => date('Y-m-d'), 'end_date' => date('Y-m-d', strtotime('+20 days')), 'description' => 'Mô tả HTTP'];
-function multipart(array $fields, string $filename, string $content, string $mime): array
+function multipart(array $fields, string $filename, string $content, string $mime, string $field = 'poster'): array
 {
     $boundary = 'cinema' . bin2hex(random_bytes(16));
     $body = '';
     foreach ($fields as $key => $value) {
         $body .= '--' . $boundary . "\r\nContent-Disposition: form-data; name=\"$key\"\r\n\r\n$value\r\n";
     }
-    $body .= '--' . $boundary . "\r\nContent-Disposition: form-data; name=\"poster\"; filename=\"$filename\"\r\nContent-Type: $mime\r\n\r\n" . $content . "\r\n--$boundary--\r\n";
+    $body .= '--' . $boundary . "\r\nContent-Disposition: form-data; name=\"$field\"; filename=\"$filename\"\r\nContent-Type: $mime\r\n\r\n" . $content . "\r\n--$boundary--\r\n";
     return [$body, ['Content-Type: multipart/form-data; boundary=' . $boundary]];
 }
 [$body,$headers] = multipart($fields, 'poster.jpg', '<?php echo "bad"; ?>', 'image/jpeg');
@@ -207,7 +207,59 @@ http_check(request($admin, '/admin/history.php?id=99999999')['status'] === 404, 
 http_check(str_contains(request($admin, '/admin/history.php?kind=invoices&id=' . $historyId)['body'], 'admin-only'), 'Admin không đối chiếu được dữ liệu nguồn.');
 http_check(request($a, '/admin/history.php')['status'] === 303, 'Khách vào được lịch sử quản trị.');
 
+$newsPage = request($admin, '/admin/news-edit.php');
+http_check($newsPage['status'] === 200, 'Không mở được editor tin.');
+$newsFields = ['csrf' => token($newsPage), 'title' => 'Tin HTTP ' . $phone . ' <script>news-xss</script>', 'summary' => 'Mô tả <img src=x onerror=alert(1)>', 'body' => "Dòng đầu\nNội dung <script>alert(1)</script>", 'category' => 'promotion', 'status' => 'draft', 'published_at' => date('Y-m-d\TH:i', strtotime('-1 day')), 'expires_at' => '', 'stock_image' => 'com.jpg'];
+http_check(request($a, '/admin/news-edit.php', 'POST', $newsFields)['status'] === 303 && D::one('SELECT id FROM cinema_news WHERE title=?', [$newsFields['title']]) === null, 'Khách đăng được tin.');
+http_check(request($admin, '/admin/news-edit.php', 'POST', array_replace($newsFields, ['csrf' => 'bad']))['status'] === 419, 'Tin bỏ qua CSRF.');
+$missingImage = request($admin, '/admin/news-edit.php', 'POST', array_replace($newsFields, ['stock_image' => '']));
+http_check($missingImage['status'] === 200 && str_contains($missingImage['body'], e($newsFields['body'])) && D::one('SELECT id FROM cinema_news WHERE title=?', [$newsFields['title']]) === null, 'Tin thiếu ảnh không được kiểm tra hoặc mất nội dung nhập.');
+$saved = request($admin, '/admin/news-edit.php', 'POST', $newsFields);
+http_check($saved['status'] === 303, 'Không lưu được bản nháp.');
+$newsId = (int) D::one('SELECT id FROM cinema_news WHERE title=?', [$newsFields['title']])['id'];
+$editPath = '/admin/news-edit.php?id=' . $newsId;
+$publicPath = '/news-detail.php?id=' . $newsId;
+http_check(request($a, $publicPath)['status'] === 404 && !str_contains(request($a, '/news.php')['body'], e($newsFields['title'])), 'Bản nháp lộ công khai.');
+$editPage = request($admin, $editPath);
+http_check(str_contains($editPage['body'], e($newsFields['body'])) && !str_contains($editPage['body'], '<script>alert(1)</script>'), 'Editor tin không escape nội dung.');
+$newsFields['csrf'] = token($editPage);
+$newsFields['stock_image'] = '';
+$invalidDate = request($admin, $editPath, 'POST', array_replace($newsFields, ['expires_at' => $newsFields['published_at']]));
+http_check($invalidDate['status'] === 200 && str_contains($invalidDate['body'], 'alert-error') && D::one('SELECT expires_at FROM cinema_news WHERE id=?', [$newsId])['expires_at'] === null, 'Tin nhận thời gian hết hạn sai.');
+$newsFields['status'] = 'published';
+http_check(request($admin, $editPath, 'POST', $newsFields)['status'] === 303, 'Không đăng được tin.');
+$public = request($a, $publicPath);
+http_check($public['status'] === 200 && str_contains($public['body'], nl2br(e($newsFields['body']))) && !str_contains($public['body'], '<script>alert(1)</script>'), 'Trang tin không escape nội dung.');
+http_check(str_contains(request($a, '/')['body'], e($newsFields['title'])) && str_contains(request($a, '/news.php?category=promotion')['body'], e($newsFields['title'])) && !str_contains(request($a, '/news.php?category=news')['body'], e($newsFields['title'])), 'Trang chủ/lọc tin chưa dùng dữ liệu mới.');
+$newsFields['published_at'] = date('Y-m-d\TH:i', strtotime('+1 day'));
+request($admin, $editPath, 'POST', $newsFields);
+http_check(request($a, $publicPath)['status'] === 404 && !str_contains(request($a, '/')['body'], e($newsFields['title'])), 'Tin hẹn giờ bị hiển thị sớm.');
+$newsFields['published_at'] = date('Y-m-d\TH:i', strtotime('-2 days'));
+$newsFields['expires_at'] = date('Y-m-d\TH:i', strtotime('-1 day'));
+request($admin, $editPath, 'POST', $newsFields);
+http_check(request($a, $publicPath)['status'] === 404, 'Bài hết hạn vẫn đọc được.');
+$newsFields['expires_at'] = '';
+[$newsBody, $newsHeaders] = multipart($newsFields, 'cover.jpg', '<?php echo "bad"; ?>', 'image/jpeg', 'image');
+http_check(request($admin, $editPath, 'POST', $newsBody, $newsHeaders)['status'] === 200 && D::one('SELECT image FROM cinema_news WHERE id=?', [$newsId])['image'] === 'tinmoikhuyenmai/com.jpg', 'Ảnh tin PHP giả JPEG được nhận.');
+[$newsBody, $newsHeaders] = multipart($newsFields, 'cover.php', file_get_contents(APP_ROOT . '/public/assets/images/tinmoikhuyenmai/com.jpg'), 'image/jpeg', 'image');
+http_check(request($admin, $editPath, 'POST', $newsBody, $newsHeaders)['status'] === 303, 'Ảnh tin hợp lệ không lưu được.');
+$imageOne = D::one('SELECT image FROM cinema_news WHERE id=?', [$newsId])['image'];
+http_check(preg_match('/^upload:[a-f0-9]{40}\.jpg$/', $imageOne) === 1 && request($a, '/media.php?file=' . substr($imageOne, 7))['headers']['content-type'] === 'image/jpeg', 'Ảnh tin không đổi tên an toàn hoặc không đọc được.');
+request($admin, $editPath, 'POST', $newsFields);
+http_check(D::one('SELECT image FROM cinema_news WHERE id=?', [$newsId])['image'] === $imageOne, 'Sửa tin không tải ảnh làm mất ảnh cũ.');
+[$newsBody, $newsHeaders] = multipart($newsFields, 'new-cover.jpg', file_get_contents(APP_ROOT . '/public/assets/images/tinmoikhuyenmai/snack.jpg'), 'image/jpeg', 'image');
+request($admin, $editPath, 'POST', $newsBody, $newsHeaders);
+$imageTwo = D::one('SELECT image FROM cinema_news WHERE id=?', [$newsId])['image'];
+http_check($imageTwo !== $imageOne && !is_file(APP_ROOT . '/storage/uploads/' . substr($imageOne, 7)), 'Thay ảnh tin không dọn file cũ.');
+$adminNews = request($admin, '/admin/news.php');
+http_check($adminNews['status'] === 200 && str_contains($adminNews['body'], e($newsFields['title'])), 'Danh sách admin không có bài mới.');
+http_check(request($admin, '/admin/news.php', 'POST', ['csrf' => 'bad', 'action' => 'hide', 'id' => $newsId])['status'] === 419, 'Ẩn tin bỏ qua CSRF.');
+request($admin, '/admin/news.php', 'POST', ['csrf' => token($adminNews), 'action' => 'hide', 'id' => $newsId]);
+http_check(request($a, $publicPath)['status'] === 404 && !str_contains(request($a, '/news.php')['body'], e($newsFields['title'])), 'Tin đã ẩn vẫn công khai.');
+http_check(request($a, '/news-detail.php?id=99999999')['status'] === 404 && request($admin, '/admin/news-edit.php?id=99999999')['status'] === 404, 'ID tin không tồn tại không trả 404.');
+App\Support\Upload::remove($imageTwo);
+
 $page = request($a, '/account/profile.php');
 $response = request($a, '/auth/logout.php', 'POST', ['csrf' => token($page), 'role' => 'user']);
 http_check($response['status'] === 303 && request($a, '/account/profile.php')['status'] === 303, 'Đăng xuất chưa xóa phiên.');
-echo "PASS HTTP: $checks kiểm tra đăng ký, phiên, CSRF, hồ sơ, đặt vé, IDOR, VNPay/IPN, lịch sử, admin, upload và media range.\n";
+echo "PASS HTTP: $checks kiểm tra đăng ký, phiên, CSRF, hồ sơ, đặt vé, IDOR, VNPay/IPN, lịch sử, tin/ưu đãi, admin, upload và media range.\n";

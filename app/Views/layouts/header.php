@@ -9,6 +9,7 @@ $current = basename($_SERVER['SCRIPT_NAME'] ?? 'index.php');
 $links = $adminShell ? [
     'admin/index.php' => ['Tổng quan', 'grid', ['index.php']],
     'admin/movies.php' => ['Phim', 'film', ['movies.php', 'movie-edit.php']],
+    'admin/news.php' => ['Tin & ưu đãi', 'news', ['news.php', 'news-edit.php']],
     'admin/cinemas.php' => ['Rạp & phòng', 'building', ['cinemas.php', 'cinema-edit.php', 'room-edit.php']],
     'admin/showtimes.php' => ['Lịch chiếu', 'calendar', ['showtimes.php', 'showtime-edit.php']],
     'admin/orders.php' => ['Đơn vé', 'ticket', ['orders.php', 'order.php']],
@@ -21,7 +22,7 @@ $links = $adminShell ? [
     'index.php' => ['Home', 'film', ['index.php']],
     'showtimes.php' => ['Đặt vé', 'ticket', ['showtimes.php', 'booking.php']],
     'index.php#movies' => ['Phim', 'film', ['movie.php']],
-    'index.php#tinmoi' => ['Tin mới & ưu đãi', 'cup', []],
+    'news.php' => ['Tin mới & ưu đãi', 'news', ['news.php', 'news-detail.php']],
 ];
 $headerSearch = $current === 'index.php' && is_string($_GET['q'] ?? null) ? mb_substr(trim($_GET['q']), 0, 120) : '';
 $headerStatus = in_array($_GET['status'] ?? 'showing', ['showing', 'upcoming', 'all'], true) ? ($_GET['status'] ?? 'showing') : 'showing';

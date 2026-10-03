@@ -12,17 +12,13 @@ use App\Services\CinemaService as C;
 if (D::one('SELECT id FROM cinema_movies LIMIT 1') || D::one('SELECT id FROM cinema_cinemas LIMIT 1')) {
     throw new RuntimeException('Chỉ tạo dữ liệu mẫu khi danh mục phim và rạp đang trống.');
 }
-$films = [
-    ['Jujutsu Kaisen', 'Hoạt hình · Hành động', 16, 110, 'jujutsu-kaisen-500-1759216418459.jpg'],
-    ['Avatar 3', 'Khoa học viễn tưởng', 13, 180, 'avatar-3-500-1753848148849.jpg'],
-    ['Tron: Ares', 'Khoa học viễn tưởng', 13, 119, 'tron-ares-500-1760067381479.jpg'],
-    ['Shin-chan', 'Hoạt hình · Gia đình', 0, 104, 'shinchan-500-1754281110224.jpg'],
-];
+$films = (require APP_ROOT . '/database/demo-content.php')['movies'];
 $db = db();
 $db->beginTransaction();
 try {
-    foreach ($films as [$title,$genre,$age,$duration,$poster]) {
-        D::execute('INSERT INTO cinema_movies (title,genre,age_rating,duration,release_date,end_date,description,poster) VALUES (?,?,?,?,?,?,?,?)', [$title, $genre, $age, $duration, date('Y-m-d'), date('Y-m-d', strtotime('+60 days')), 'Dữ liệu minh họa cho đồ án; lịch phát hành và thời lượng trong bản mẫu không phải lịch chiếu thực tế.', $poster]);
+    foreach ($films as $film) {
+        [$title,$genre,$age,$duration,$poster,$days] = $film;
+        D::execute('INSERT INTO cinema_movies (title,genre,age_rating,duration,release_date,end_date,description,poster,trailer) VALUES (?,?,?,?,?,?,?,?,?)', [$title, $genre, $age, $duration, date('Y-m-d', strtotime('+' . $days . ' days')), date('Y-m-d', strtotime('+' . ($days + 60) . ' days')), 'Dữ liệu minh họa cho đồ án; lịch phát hành, giới hạn tuổi và thời lượng trong bản mẫu không phải lịch chiếu thực tế.', $poster, $film['trailer'] ?? null]);
     }
     foreach ([['Galaxy Quang Trung', 'Quang Trung, TP. Hồ Chí Minh'], ['Galaxy Nguyễn Du', 'Nguyễn Du, TP. Hồ Chí Minh']] as [$name,$address]) {
         D::execute('INSERT INTO cinema_cinemas (name,address,phone) VALUES (?,?,?)', [$name, $address, '0900000000']);

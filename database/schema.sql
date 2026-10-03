@@ -1,4 +1,20 @@
 -- MySQL 8 / MariaDB 10.6+, UTF-8, InnoDB. Does not drop legacy tables.
+CREATE TABLE IF NOT EXISTS cinema_news (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    sample_key VARCHAR(80) NULL UNIQUE,
+    title VARCHAR(190) NOT NULL,
+    summary VARCHAR(300) NOT NULL,
+    body MEDIUMTEXT NOT NULL,
+    image VARCHAR(255) NOT NULL,
+    category VARCHAR(16) NOT NULL DEFAULT 'news',
+    status VARCHAR(16) NOT NULL DEFAULT 'draft',
+    is_demo TINYINT NOT NULL DEFAULT 0,
+    published_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX news_public (status, published_at, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE TABLE IF NOT EXISTS cinema_meta (
     setting_key VARCHAR(80) PRIMARY KEY,
     setting_value VARCHAR(255) NOT NULL

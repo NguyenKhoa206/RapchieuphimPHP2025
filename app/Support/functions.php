@@ -126,6 +126,31 @@ function text_input(string $key, int $max = 255, bool $required = true): string
     return $value;
 }
 
+function youtube_trailer_url(?string $url): ?string
+{
+    if (!$url || strlen($url) > 255 || preg_match('/[\x00-\x20\x7f]/', $url)) {
+        return null;
+    }
+    $parts = parse_url($url);
+    if (!$parts || ($parts['scheme'] ?? '') !== 'https' || isset($parts['user']) || isset($parts['pass']) || (isset($parts['port']) && $parts['port'] !== 443)) {
+        return null;
+    }
+    $host = strtolower($parts['host'] ?? '');
+    $path = $parts['path'] ?? '';
+    $id = null;
+    if (in_array($host, ['youtu.be', 'www.youtu.be'], true) && preg_match('~^/([A-Za-z0-9_-]{11})/?$~', $path, $match)) {
+        $id = $match[1];
+    } elseif (in_array($host, ['youtube.com', 'www.youtube.com', 'm.youtube.com'], true)) {
+        if ($path === '/watch') {
+            parse_str($parts['query'] ?? '', $query);
+            $id = is_string($query['v'] ?? null) ? $query['v'] : null;
+        } elseif (preg_match('~^/(?:shorts|embed)/([A-Za-z0-9_-]{11})/?$~', $path, $match)) {
+            $id = $match[1];
+        }
+    }
+    return $id && preg_match('/^[A-Za-z0-9_-]{11}$/', $id) ? 'https://www.youtube.com/watch?v=' . $id : null;
+}
+
 function fail_not_found(): never
 {
     http_response_code(404);

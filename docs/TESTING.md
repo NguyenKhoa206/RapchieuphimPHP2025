@@ -5,6 +5,7 @@
 ```bash
 DB_NAME=cinema_test php scripts/install.php
 DB_NAME=cinema_test php tests/run.php
+DB_NAME=cinema_test php tests/news.php
 DB_NAME=cinema_test php tests/concurrency.php
 DB_NAME=cinema_migration_test php scripts/install.php
 DB_NAME=cinema_migration_test php tests/migration.php
@@ -68,6 +69,8 @@ Trong terminal khác đặt cùng các biến thử rồi chạy `php tests/http
 
 ## Trình duyệt
 
+`tests/news.php` kiểm tra bài nháp/ẩn, giờ đăng/hết hạn, phân loại/phân trang, nội dung UTF-8 dài và thêm mẫu main cũ không ghi đè dữ liệu. Bộ HTTP kiểm tra phân quyền admin, CSRF, chống XSS, giữ dữ liệu nhập khi lỗi, tải/thay ảnh và dọn ảnh cũ. Trong bộ UI, admin tạo bản nháp, đăng bài, sửa tiêu đề/ảnh rồi ẩn; phía khách kiểm tra đọc/lọc bài và cuộn tin bằng nút/bàn phím.
+
 Node.js 20+ chỉ dùng để chạy kiểm thử. `package-lock.json` cố định các dependency của công cụ; website PHP không cần `npm install` để hoạt động.
 
 ```bash
@@ -75,7 +78,7 @@ npm ci --ignore-scripts --no-audit --no-fund
 npx playwright install --with-deps chromium
 ```
 
-Chuẩn bị **CSDL UI mới** tên `cinema_ui_test`, đặt biến VNPay thử như trên, chạy installer/seed và `php tests/ui-fixture.php`, rồi khởi động PHP server. Trong terminal có cùng cấu hình: `npm run test:ui`.
+Chuẩn bị **CSDL UI mới** tên `cinema_ui_test`, đặt biến VNPay thử như trên, chạy installer, `php scripts/seed.php`, `php scripts/seed-content.php` và `php tests/ui-fixture.php`, rồi khởi động PHP server. Trong terminal có cùng cấu hình: `npm run test:ui`.
 
 Kiểm tra 1440×960 và 390×844: trang phim, chi tiết phim, tìm kiếm không có kết quả, đăng nhập, lịch, chọn ghế/tính giá, chuyển sang trang ngân hàng mô phỏng, IPN ký từ Node, vé đã thanh toán, danh sách vé, lịch sử, quản trị và doanh thu. Kiểm tra nút/bàn phím đổi banner, tìm phim từ header, menu tài khoản/hóa đơn cũ, tràn ngang, ảnh thiếu, JavaScript/CSP, mở/đóng menu và các luật WCAG A/AA bằng axe. `test-results/` chứa ảnh và báo cáo; CI tải lên artifact `cinema-ui-checks`. Kiểm tra tự động không chứng minh toàn bộ WCAG hay thay thế rà soát thị giác/thử merchant thật.
 

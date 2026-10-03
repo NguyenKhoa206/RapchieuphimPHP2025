@@ -60,6 +60,11 @@ final class CinemaService
             || $input['duration'] < 1 || $input['duration'] > 600 || !in_array($input['age_rating'], [0, 13, 16, 18], true)) {
             throw new \DomainException('Ngày chiếu, thời lượng hoặc giới hạn tuổi không hợp lệ.');
         }
+        $url = is_string($input['trailer_url'] ?? null) ? trim($input['trailer_url']) : '';
+        $externalTrailer = youtube_trailer_url($url);
+        if ($url !== '' && !$externalTrailer) {
+            throw new \DomainException('Trailer phải là đường dẫn HTTPS của YouTube hoặc youtu.be.');
+        }
         $db = db();
         $poster = null;
         $trailer = null;
@@ -75,7 +80,7 @@ final class CinemaService
                 && D::one('SELECT id FROM cinema_showtimes WHERE movie_id=? AND active=1 AND starts_at>NOW() LIMIT 1', [$id])) {
                 throw new \DomainException('Phim đã có lịch chiếu tương lai. Hãy hủy các lịch chưa bán vé trước khi sửa thời lượng hoặc ngày phát hành.');
             }
-            $values = [$input['title'], $input['genre'], $input['age_rating'], $input['duration'], $input['release_date'], $input['end_date'], $input['description'], $poster ?? ($old['poster'] ?? null), $trailer ?? ($old['trailer'] ?? null)];
+            $values = [$input['title'], $input['genre'], $input['age_rating'], $input['duration'], $input['release_date'], $input['end_date'], $input['description'], $poster ?? ($old['poster'] ?? null), $trailer ?? $externalTrailer ?? ($old['trailer'] ?? null)];
             if ($id) {
                 D::execute('UPDATE cinema_movies SET title=?,genre=?,age_rating=?,duration=?,release_date=?,end_date=?,description=?,poster=?,trailer=? WHERE id=?', [...$values, $id]);
             } else {
@@ -93,7 +98,7 @@ final class CinemaService
         if ($poster) {
             Upload::remove($old['poster'] ?? null);
         }
-        if ($trailer) {
+        if ($trailer || $externalTrailer) {
             Upload::remove($old['trailer'] ?? null);
         }
     }

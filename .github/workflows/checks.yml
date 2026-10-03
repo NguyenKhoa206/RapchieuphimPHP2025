@@ -50,6 +50,7 @@ jobs:
           php tests/payments.php
           php tests/payment-concurrency.php
           php tests/history.php
+          php tests/news.php
           php tests/concurrency.php
       - name: Check legacy migration
         env:
@@ -68,6 +69,7 @@ jobs:
         run: |
           php scripts/install.php
           php scripts/seed.php
+          php scripts/seed-content.php
           php -S 127.0.0.1:8000 -t public > /tmp/cinema-php.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid"' EXIT
@@ -91,6 +93,7 @@ jobs:
         run: |
           php scripts/install.php
           php scripts/seed.php
+          php scripts/seed-content.php
           php tests/ui-fixture.php
           php -S 127.0.0.1:8000 -t public > /tmp/cinema-ui.log 2>&1 &
           server_pid=$!
