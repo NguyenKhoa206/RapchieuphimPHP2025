@@ -5,7 +5,7 @@
 | Be Vietnam Pro 1.002 | Nội dung, menu, biểu mẫu, tin tức, quản trị; đậm 400–800 | `be-vietnam-pro/be-vietnam-pro-{400,500,600,700,800}.woff2` |
 | Oswald 4.103 | Tiêu đề phía khách, tên phim trên thẻ poster, banner; trục đậm 200–700, giao diện dùng 600/700 | `oswald/oswald-variable.woff2` |
 
-Tổng sáu tệp: 273.440 byte. Tệp gốc được chuyển từ TTF sang WOFF2 bằng FontTools 4.61.1, giữ toàn bộ glyph, dấu tiếng Việt, bảng OpenType và trục biến thiên. Không sửa hình dáng chữ hoặc tạo subset. Website không cần Python, Node.js hay kết nối Google Fonts để dùng font.
+Tổng sáu tệp: 273.440 byte. Tệp gốc được chuyển từ TTF sang WOFF2 bằng FontTools 4.61.1, giữ toàn bộ glyph, dấu tiếng Việt, tính năng OpenType và trục biến thiên. Không sửa hình dáng chữ hoặc tạo subset. Website không cần Python, Node.js hay kết nối Google Fonts để dùng font.
 
 `../css/fonts.css` khai báo font với `font-display: swap`. Các token `--font-body` và `--font-display` nằm trong `../css/app.css`; cỡ chữ/giãn dòng của giao diện cũ nằm trong `../css/classic.css`. Layout preload Be Vietnam Pro 400 và Oswald ở trang khách; các độ đậm còn lại chỉ tải khi trình duyệt cần. URL preload trùng URL trong CSS, kể cả khi chạy ở thư mục con của XAMPP. Các font có fallback sans-serif.
 
