@@ -480,9 +480,6 @@ label input[type="checkbox"] {
     width: min(1000px, 100%);
     margin: 36px auto;
 }
-.auth-intro h1 {
-    font-size: clamp(2rem, 4vw, 3rem);
-}
 .auth-intro p {
     max-width: 360px;
     color: var(--muted);

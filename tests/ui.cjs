@@ -116,6 +116,19 @@ async function login(page, admin = false) {
             });
             await page.goto("/");
             await inspect(page, `${device}-home`);
+            if (device === "desktop") {
+                for (const width of [320, 768, 900, 1024]) {
+                    await page.setViewportSize({ width, height: 960 });
+                    assert(
+                        (await page.evaluate(
+                            () => document.documentElement.scrollWidth,
+                        )) <=
+                            width + 1,
+                        `Homepage overflows at ${width}px`,
+                    );
+                }
+                await page.setViewportSize(viewport);
+            }
             const slides = page.locator("[data-slide]");
             assert(
                 (await slides.count()) >= 2,
@@ -185,6 +198,11 @@ async function login(page, admin = false) {
                 ]);
             }
             await inspect(page, `${device}-booking`);
+            if (device === "desktop") {
+                await page.setViewportSize({ width: 320, height: 844 });
+                await inspect(page, "narrow-booking");
+                await page.setViewportSize(viewport);
+            }
             const seat = page
                 .locator(".seat-choice:has(input:not(:disabled))")
                 .first();
@@ -325,6 +343,11 @@ async function login(page, admin = false) {
             await inspect(page, `${device}-old-invoice-detail`);
             await login(page, true);
             await inspect(page, `${device}-admin-dashboard`);
+            if (device === "desktop") {
+                await page.setViewportSize({ width: 320, height: 844 });
+                await inspect(page, "narrow-admin-dashboard");
+                await page.setViewportSize(viewport);
+            }
             if (device === "mobile") {
                 await page.locator(".nav-toggle").click();
                 assert(

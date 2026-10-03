@@ -536,9 +536,13 @@ textarea {
 }
 .admin-shell .site-footer {
     margin-left: 250px;
+    padding: 0;
+    background: #fff;
 }
-.admin-shell .footer-grid {
-    gap: 22px;
+.admin-shell .footer-copyright {
+    color: var(--muted);
+    border: 0;
+    text-align: left;
 }
 @media (max-width: 1100px) {
     .header-row {
@@ -761,6 +765,15 @@ textarea {
     }
     .footer-copyright {
         font-size: 11px;
+    }
+}
+@media (max-width: 360px) {
+    .brand-logo,
+    .admin-shell .brand-logo {
+        width: 96px;
+    }
+    .account-menu summary span {
+        max-width: 48px;
     }
 }
 @media print {
