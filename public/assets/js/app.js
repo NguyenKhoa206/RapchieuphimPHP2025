@@ -26,6 +26,51 @@ document.addEventListener("keydown", (event) => {
 window
     .matchMedia("(min-width: 901px)")
     .addEventListener("change", () => setNavigation(false));
+document
+    .querySelectorAll("#primary-nav a")
+    .forEach((link) =>
+        link.addEventListener("click", () => setNavigation(false)),
+    );
+document.querySelectorAll(".account-menu").forEach((menu) => {
+    document.addEventListener("click", (event) => {
+        if (!menu.contains(event.target)) menu.open = false;
+    });
+    menu.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            menu.open = false;
+            menu.querySelector("summary").focus();
+        }
+    });
+});
+document.querySelectorAll("[data-carousel]").forEach((carousel) => {
+    const slides = [...carousel.querySelectorAll("[data-slide]")];
+    const dots = [...carousel.querySelectorAll("[data-carousel-to]")];
+    const controls = carousel.querySelector("[data-carousel-controls]");
+    if (slides.length < 2 || !controls) return;
+    let current = 0;
+    const show = (index) => {
+        current = (index + slides.length) % slides.length;
+        slides.forEach((slide, position) => {
+            slide.hidden = position !== current;
+        });
+        dots.forEach((dot, position) => {
+            if (position === current) dot.setAttribute("aria-current", "true");
+            else dot.removeAttribute("aria-current");
+        });
+        carousel.querySelector("[data-carousel-status]").textContent =
+            `${current + 1} / ${slides.length}: ${slides[current].querySelector("h2").textContent}`;
+    };
+    carousel
+        .querySelector("[data-carousel-prev]")
+        .addEventListener("click", () => show(current - 1));
+    carousel
+        .querySelector("[data-carousel-next]")
+        .addEventListener("click", () => show(current + 1));
+    dots.forEach((dot, index) =>
+        dot.addEventListener("click", () => show(index)),
+    );
+    controls.hidden = false;
+});
 document.querySelectorAll("[data-confirm]").forEach((button) =>
     button.addEventListener("click", (event) => {
         if (!window.confirm(button.dataset.confirm)) event.preventDefault();

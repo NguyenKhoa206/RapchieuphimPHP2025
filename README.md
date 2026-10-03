@@ -2,6 +2,8 @@
 
 Ứng dụng PHP/MySQL quản lý phim, rạp, phòng, lịch chiếu, đặt ghế, combo, thanh toán VNPay, lịch sử hóa đơn/vé và doanh thu. Bản này gom phần xử lý dùng chung, bỏ các trang HTML/file `copy` trùng lặp, và bổ sung luồng đặt vé lưu vào CSDL.
 
+Giao diện giữ phong cách nhánh `main` cũ: logo Galaxy, header trắng, banner phim lớn, tab gạch cam, poster bốn cột và footer đen. `public/assets/css/app.css` chứa thành phần dùng chung; `classic.css` chứa màu sắc/bố cục theo bản cũ. Banner chuyển thủ công bằng nút hoặc bàn phím, lấy phim từ danh mục hiện tại. Các ảnh ưu đãi chỉ là nội dung giới thiệu, không xác nhận chương trình đang còn hiệu lực.
+
 ## Yêu cầu
 
 - PHP 8.1 trở lên; đã kiểm thử với PHP 8.3.

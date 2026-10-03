@@ -116,13 +116,59 @@ async function login(page, admin = false) {
             });
             await page.goto("/");
             await inspect(page, `${device}-home`);
+            const slides = page.locator("[data-slide]");
+            assert(
+                (await slides.count()) >= 2,
+                "Carousel fixture needs two films",
+            );
+            await page.locator("[data-carousel-next]").click();
+            assert(await slides.nth(1).isVisible(), "Next film did not appear");
+            assert(
+                !(await slides.first().isVisible()),
+                "Previous slide remained visible",
+            );
+            await page.locator("[data-carousel-prev]").click();
+            assert(
+                await slides.first().isVisible(),
+                "Previous film did not return",
+            );
+            await page.locator('[data-carousel-to="2"]').focus();
+            await page.keyboard.press("Enter");
+            assert(
+                await slides.nth(2).isVisible(),
+                "Keyboard slide selection failed",
+            );
             if (device === "mobile") {
                 const menu = page.locator(".nav-toggle");
                 await menu.click();
                 assert.equal(await menu.getAttribute("aria-expanded"), "true");
                 await page.keyboard.press("Escape");
                 assert.equal(await menu.getAttribute("aria-expanded"), "false");
+                await menu.click();
             }
+            await page.locator(".header-search input[name=q]").fill("Avatar");
+            await Promise.all([
+                page.waitForURL(
+                    (url) => url.searchParams.get("q") === "Avatar",
+                ),
+                page.locator(".header-search button").click(),
+            ]);
+            assert.equal(
+                await page.locator(".movie-card").count(),
+                1,
+                "Header search did not filter films",
+            );
+            await page.locator(".movie-card h3 a").click();
+            await inspect(page, `${device}-movie-detail`);
+            await page.goto("/?q=ui-no-such-film");
+            await inspect(page, `${device}-empty-search`);
+            assert.equal(await page.locator(".movie-card").count(), 0);
+            assert.equal(
+                await page.locator("[data-carousel-controls]").count(),
+                0,
+            );
+            await page.goto("/auth/login.php");
+            await inspect(page, `${device}-login`);
             await page.goto("/showtimes.php");
             await inspect(page, `${device}-showtimes`);
             await page.locator(".showtime-card .button").first().click();
@@ -264,7 +310,16 @@ async function login(page, admin = false) {
             await inspect(page, `${device}-paid-ticket`);
             await page.goto("/account/tickets.php");
             await inspect(page, `${device}-tickets`);
-            await page.goto("/account/tickets.php?tab=invoices");
+            await page.locator(".account-menu summary").click();
+            await page.keyboard.press("Escape");
+            assert.equal(
+                await page.locator(".account-menu").getAttribute("open"),
+                null,
+            );
+            await page.locator(".account-menu summary").click();
+            await page
+                .locator('.account-dropdown a[href*="tab=invoices"]')
+                .click();
             await inspect(page, `${device}-old-invoices`);
             await page.locator(".archive-card .button").first().click();
             await inspect(page, `${device}-old-invoice-detail`);
@@ -294,7 +349,7 @@ async function login(page, admin = false) {
         const failures = results.filter((result) => result.violations.length);
         assert.equal(failures.length, 0, JSON.stringify(failures));
         console.log(
-            `PASS UI: ${results.length} desktop/mobile pages, checkout, stubbed VNPay/IPN, archive, navigation, accessibility, no browser errors.`,
+            `PASS UI: ${results.length} desktop/mobile pages, carousel, search, checkout, stubbed VNPay/IPN, archive, navigation, accessibility, no browser errors.`,
         );
     } finally {
         await browser.close();

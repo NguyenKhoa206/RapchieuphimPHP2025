@@ -1,7 +1,7 @@
 <?php view('layouts/header', ['title' => $register ? 'Tạo tài khoản' : 'Đăng nhập', 'adminPage' => $adminLogin]); ?>
 <section class="auth-layout">
-    <div class="auth-intro"><span class="eyebrow">HẸN BẠN TẠI RẠP</span><h1>Một tài khoản.<br>Nhiều trải nghiệm.</h1><p>Đặt ghế, theo dõi vé và quản lý thông tin của bạn tại một nơi.</p><div class="cinema-art" aria-hidden="true"><span>G</span><p>LIGHTS. CAMERA. CINEMA.</p></div></div>
-    <div class="panel auth-panel"><h2><?= $register ? 'Tạo tài khoản' : ($adminLogin ? 'Đăng nhập quản trị' : 'Chào mừng trở lại') ?></h2>
+    <div class="auth-intro"><span class="eyebrow">HẸN BẠN TẠI RẠP</span><h2>Một tài khoản.<br>Nhiều trải nghiệm.</h2><p>Đặt ghế, theo dõi vé và quản lý thông tin của bạn tại một nơi.</p><div class="cinema-art" aria-hidden="true"><span>G</span><p>LIGHTS. CAMERA. CINEMA.</p></div></div>
+    <div class="panel auth-panel"><h1><?= $register ? 'Tạo tài khoản' : ($adminLogin ? 'Đăng nhập quản trị' : 'Chào mừng trở lại') ?></h1>
     <p class="muted"><?= $register ? 'Điền thông tin để bắt đầu đặt vé.' : 'Nhập thông tin tài khoản để tiếp tục.' ?></p>
     <?php if ($error): ?><div class="alert alert-error" role="alert"><?= e($error) ?></div><?php endif; ?>
     <form method="post" class="form-stack"><?= csrf_field() ?>
