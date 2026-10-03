@@ -5,6 +5,7 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 require dirname(__DIR__) . '/app/bootstrap.php';
+require __DIR__ . '/lib/demo.php';
 use App\Support\Database as D;
 if (array_diff(array_slice($argv, 1), ['--include-movies'])) {
     throw new RuntimeException('Cách dùng: php scripts/seed-content.php [--include-movies]');
@@ -17,10 +18,12 @@ try {
     if (in_array('--include-movies', $argv, true)) {
         foreach ($content['movies'] as $film) {
             [$title, $genre, $age, $duration, $poster, $days] = $film;
-            if (D::one('SELECT id FROM cinema_movies WHERE poster=? OR title=?', [$poster, $title])) {
+            if ($existing = D::one('SELECT id FROM cinema_movies WHERE poster=? OR title=?', [$poster, $title])) {
+                seed_movie_display((int) $existing['id'], $film);
                 continue;
             }
-            D::execute('INSERT INTO cinema_movies (title,genre,age_rating,duration,release_date,end_date,description,poster,trailer) VALUES (?,?,?,?,?,?,?,?,?)', [$title, $genre, $age, $duration, date('Y-m-d', strtotime('+' . $days . ' days')), date('Y-m-d', strtotime('+' . ($days + 60) . ' days')), 'Phim minh họa từ giao diện main cũ. Lịch phát hành, giới hạn tuổi và thời lượng trong bản mẫu không phải lịch chiếu thực tế.', $poster, $film['trailer'] ?? null]);
+            D::execute('INSERT INTO cinema_movies (title,genre,age_rating,duration,release_date,end_date,description,poster,trailer) VALUES (?,?,?,?,?,?,?,?,?)', [$title, $genre, $age, $duration, date('Y-m-d', strtotime($days . ' days')), date('Y-m-d', strtotime(($days + 60) . ' days')), 'Phim minh họa từ giao diện main cũ. Lịch phát hành, giới hạn tuổi và thời lượng trong bản mẫu không phải lịch chiếu thực tế.', $poster, $film['trailer'] ?? null]);
+            seed_movie_display((int) $db->lastInsertId(), $film);
             $movies++;
         }
     }

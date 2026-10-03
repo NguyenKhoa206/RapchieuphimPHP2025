@@ -13,7 +13,7 @@ if (PHP_SAPI !== 'cli' || !str_ends_with((string) config('database.name'), '_tes
 
 function clear_fixture(): void
 {
-    $tables = ['cinema_news', 'cinema_legacy_tickets', 'cinema_legacy_invoices', 'cinema_history_batches', 'cinema_payments', 'cinema_reservations', 'cinema_order_items', 'cinema_orders', 'cinema_showtimes', 'cinema_seats', 'cinema_rooms', 'cinema_cinemas', 'cinema_movies', 'cinema_combos', 'cinema_login_attempts', 'cinema_users', 'cinema_admins', 'cinema_meta'];
+    $tables = ['cinema_movie_tags', 'cinema_movie_display', 'cinema_news', 'cinema_legacy_tickets', 'cinema_legacy_invoices', 'cinema_history_batches', 'cinema_payments', 'cinema_reservations', 'cinema_order_items', 'cinema_orders', 'cinema_showtimes', 'cinema_seats', 'cinema_rooms', 'cinema_cinemas', 'cinema_movies', 'cinema_combos', 'cinema_login_attempts', 'cinema_users', 'cinema_admins', 'cinema_meta'];
     foreach ($tables as $table) {
         D::execute('DELETE FROM ' . $table);
     }

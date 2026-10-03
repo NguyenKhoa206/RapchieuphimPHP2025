@@ -42,6 +42,44 @@ document.querySelectorAll(".account-menu").forEach((menu) => {
         }
     });
 });
+const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+document.addEventListener("click", (event) => {
+    if (motionPreference.matches) return;
+    const button = event.target.closest(
+        ".button, .carousel-arrow, .nav-toggle",
+    );
+    if (!button || button.disabled) return;
+    const bounds = button.getBoundingClientRect();
+    const diameter = Math.max(bounds.width, bounds.height) * 2;
+    const ripple = document.createElement("span");
+    ripple.className = "button-ripple";
+    ripple.setAttribute("aria-hidden", "true");
+    ripple.style.width = ripple.style.height = `${diameter}px`;
+    ripple.style.left = `${(event.detail ? event.clientX - bounds.left : bounds.width / 2) - diameter / 2}px`;
+    ripple.style.top = `${(event.detail ? event.clientY - bounds.top : bounds.height / 2) - diameter / 2}px`;
+    button.append(ripple);
+    ripple.addEventListener("animationend", () => ripple.remove(), {
+        once: true,
+    });
+    setTimeout(() => ripple.remove(), 650);
+});
+if ("IntersectionObserver" in window && !motionPreference.matches) {
+    const reveal = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add("motion-revealed");
+                reveal.unobserve(entry.target);
+            });
+        },
+        { threshold: 0.08 },
+    );
+    document
+        .querySelectorAll(
+            ".customer-shell .movie-card, .customer-shell .news-card, .customer-shell .section-heading",
+        )
+        .forEach((element) => reveal.observe(element));
+}
 document.querySelectorAll("[data-carousel]").forEach((carousel) => {
     const slides = [...carousel.querySelectorAll("[data-slide]")];
     const dots = [...carousel.querySelectorAll("[data-carousel-to]")];
@@ -69,6 +107,42 @@ document.querySelectorAll("[data-carousel]").forEach((carousel) => {
     dots.forEach((dot, index) =>
         dot.addEventListener("click", () => show(index)),
     );
+    carousel.addEventListener("keydown", (event) => {
+        if (
+            event.target.closest("[data-carousel-controls]") &&
+            ["ArrowLeft", "ArrowRight"].includes(event.key)
+        ) {
+            event.preventDefault();
+            show(current + (event.key === "ArrowRight" ? 1 : -1));
+        }
+    });
+    let touchStart;
+    carousel.addEventListener(
+        "pointerdown",
+        (event) => {
+            if (
+                event.pointerType === "touch" &&
+                !event.target.closest("a,button")
+            )
+                touchStart = { x: event.clientX, y: event.clientY };
+        },
+        { passive: true },
+    );
+    carousel.addEventListener(
+        "pointerup",
+        (event) => {
+            if (!touchStart) return;
+            const x = event.clientX - touchStart.x;
+            const y = event.clientY - touchStart.y;
+            touchStart = null;
+            if (Math.abs(x) > 50 && Math.abs(x) > Math.abs(y) * 1.5)
+                show(current + (x < 0 ? 1 : -1));
+        },
+        { passive: true },
+    );
+    carousel.addEventListener("pointercancel", () => {
+        touchStart = null;
+    });
     controls.hidden = false;
 });
 document.querySelectorAll("[data-news-slider]").forEach((slider) => {

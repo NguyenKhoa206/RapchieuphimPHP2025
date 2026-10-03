@@ -60,6 +60,18 @@ async function inspect(page, name) {
         0,
         `${name}: broken images`,
     );
+    await page.evaluate(async () => {
+        await Promise.all(
+            document
+                .getAnimations()
+                .filter(
+                    (animation) =>
+                        animation.effect?.getComputedTiming().iterations !==
+                        Infinity,
+                )
+                .map((animation) => animation.finished.catch(() => {})),
+        );
+    });
     const accessibility = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
         .analyze();
@@ -74,6 +86,7 @@ async function inspect(page, name) {
     await page.screenshot({
         path: `test-results/screenshots/${name}.png`,
         fullPage: true,
+        animations: "disabled",
     });
     results.push({ name, violations });
     fs.writeFileSync(
@@ -126,6 +139,86 @@ async function login(page, admin = false) {
                 4,
                 "Missing original upcoming films",
             );
+            assert.equal(await page.locator("#phimhot .movie-card").count(), 4);
+            assert.equal(await page.locator("#phimcu .movie-card").count(), 3);
+            assert.equal(
+                await page.locator("#topthang .movie-card").count(),
+                2,
+            );
+            assert.deepEqual(
+                await page
+                    .locator("#topthang .movie-ticket-count")
+                    .allTextContents(),
+                ["8 vé trong tháng", "4 vé trong tháng"],
+            );
+            const geometry = await page.evaluate(() => {
+                const banner = document
+                    .querySelector(".movie-carousel")
+                    .getBoundingClientRect();
+                const header = document
+                    .querySelector(".site-header")
+                    .getBoundingClientRect();
+                return {
+                    left: banner.left,
+                    width: banner.width,
+                    headerAbove:
+                        header.top >= banner.top &&
+                        header.bottom < banner.bottom,
+                };
+            });
+            assert(
+                Math.abs(geometry.left) < 1 &&
+                    Math.abs(geometry.width - viewport.width) < 1 &&
+                    geometry.headerAbove,
+                "Banner must span viewport with nav over it",
+            );
+            const imageSize = await page
+                .locator("[data-slide]")
+                .first()
+                .locator(".carousel-image")
+                .evaluate((img) => ({
+                    width: img.naturalWidth,
+                    height: img.naturalHeight,
+                }));
+            assert(
+                imageSize.width > imageSize.height,
+                "Main banner should use the wide image",
+            );
+            await page
+                .locator(".movie-tag-filter")
+                .getByRole("link", { name: "Anime", exact: true })
+                .click();
+            await page.waitForURL(
+                (url) => url.searchParams.get("tag") === "Anime",
+            );
+            assert.equal(await page.locator("#movies .movie-card").count(), 1);
+            await inspect(page, `${device}-tag-filter`);
+            await page
+                .locator(".catalog-heading .tabs")
+                .getByRole("link", { name: "Phim cũ", exact: true })
+                .click();
+            await page.waitForURL(
+                (url) => url.searchParams.get("status") === "past",
+            );
+            assert.equal(new URL(page.url()).searchParams.get("tag"), "Anime");
+            assert.equal(await page.locator("#movies .movie-card").count(), 1);
+            await page.goto("/?status=past");
+            assert.equal(await page.locator("#movies .movie-card").count(), 3);
+            assert(
+                !(await page.locator("#movies").textContent()).includes(
+                    "Mua vé",
+                ),
+            );
+            await inspect(page, `${device}-past-movies`);
+            await page.locator("#movies .movie-card h3 a").first().click();
+            await inspect(page, `${device}-past-detail`);
+            assert.equal(
+                await page
+                    .getByRole("link", { name: "Chọn suất chiếu", exact: true })
+                    .count(),
+                0,
+            );
+            await page.goto("/");
             const track = page.locator(".news-track");
             await page.locator("[data-news-next]").click();
             await page.waitForFunction(
@@ -174,7 +267,7 @@ async function login(page, admin = false) {
             await inspect(page, `${device}-news-list`);
             await page.goto("/");
             if (device === "desktop") {
-                for (const width of [320, 768, 900, 1024]) {
+                for (const width of [320, 768, 900, 1024, 1920]) {
                     await page.setViewportSize({ width, height: 960 });
                     assert(
                         (await page.evaluate(
@@ -191,6 +284,36 @@ async function login(page, admin = false) {
                 (await slides.count()) >= 2,
                 "Carousel fixture needs two films",
             );
+            if (device === "mobile") {
+                await page.locator(".movie-carousel").scrollIntoViewIfNeeded();
+                const bounds = await page
+                    .locator(".movie-carousel")
+                    .boundingBox();
+                const swipe = await context.newCDPSession(page);
+                const y = bounds.y + 140;
+                await swipe.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [{ x: bounds.width * 0.85, y, id: 0 }],
+                });
+                for (let step = 1; step <= 6; step++) {
+                    await swipe.send("Input.dispatchTouchEvent", {
+                        type: "touchMove",
+                        touchPoints: [
+                            { x: bounds.width * (0.85 - step * 0.1), y, id: 0 },
+                        ],
+                    });
+                    await page.waitForTimeout(16);
+                }
+                await swipe.send("Input.dispatchTouchEvent", {
+                    type: "touchEnd",
+                    touchPoints: [],
+                });
+                await swipe.detach();
+                await page.waitForFunction(
+                    () => !document.querySelectorAll("[data-slide]")[1].hidden,
+                );
+                await page.locator("[data-carousel-prev]").click();
+            }
             await page.locator("[data-carousel-next]").click();
             assert(await slides.nth(1).isVisible(), "Next film did not appear");
             assert(
@@ -202,6 +325,14 @@ async function login(page, admin = false) {
                 await slides.first().isVisible(),
                 "Previous film did not return",
             );
+            await page.locator("[data-carousel-next]").focus();
+            await page.keyboard.press("ArrowRight");
+            assert(
+                await slides.nth(1).isVisible(),
+                "Arrow key did not switch banner",
+            );
+            await page.keyboard.press("ArrowLeft");
+            assert(await slides.first().isVisible());
             await page.locator('[data-carousel-to="2"]').focus();
             await page.keyboard.press("Enter");
             assert(
@@ -429,6 +560,87 @@ async function login(page, admin = false) {
             await inspect(page, `${device}-admin-history`);
             await page.goto("/admin/revenue.php?mode=sandbox");
             await inspect(page, `${device}-admin-revenue`);
+            await page.goto("/admin/movies.php");
+            await page.locator('a[href*="movie-edit.php?id="]').first().click();
+            await inspect(page, `${device}-admin-movie-edit`);
+            const movieEditorURL = page.url();
+            const editedTitle = await page
+                .locator('[name="title"]')
+                .inputValue();
+            const originalTags = await page
+                .locator('[name="tags"]')
+                .inputValue();
+            const originalHot = await page
+                .locator('[name="is_hot"]')
+                .isChecked();
+            const originalFeatured = await page
+                .locator('[name="is_featured"]')
+                .isChecked();
+            const originalBannerURL = await page
+                .locator(".admin-banner-preview")
+                .getAttribute("src");
+            const originalBanner = await (
+                await context.request.get(originalBannerURL)
+            ).body();
+            await page.locator('[name="tags"]').fill(`UI ${device}, Phim Việt`);
+            await page.locator('[name="is_hot"]').check();
+            await page.locator('[name="is_featured"]').check();
+            await page
+                .locator('[name="banner"]')
+                .setInputFiles(
+                    "public/assets/images/snapedit-1759758535329.jpeg",
+                );
+            await Promise.all([
+                page.waitForNavigation(),
+                page
+                    .getByRole("button", { name: "Lưu phim", exact: true })
+                    .click(),
+            ]);
+            assert.equal(
+                await page.locator('[name="tags"]').inputValue(),
+                `Phim Việt, UI ${device}`,
+            );
+            assert(await page.locator('[name="is_hot"]').isChecked());
+            assert(await page.locator(".admin-banner-preview").isVisible());
+            await page.goto(
+                `/?status=all&tag=${encodeURIComponent(`UI ${device}`)}`,
+            );
+            assert.equal(await page.locator("#movies .movie-card").count(), 1);
+            assert.equal(
+                await page.locator("#movies h3").textContent(),
+                editedTitle,
+            );
+            await page.goto(movieEditorURL);
+            await page.locator('[name="remove_banner"]').check();
+            await page.locator('[name="is_featured"]').uncheck();
+            await page.locator('[name="is_hot"]').uncheck();
+            await page.locator('[name="tags"]').fill("");
+            await Promise.all([
+                page.waitForNavigation(),
+                page
+                    .getByRole("button", { name: "Lưu phim", exact: true })
+                    .click(),
+            ]);
+            assert.equal(
+                await page.locator(".admin-banner-preview").count(),
+                0,
+            );
+            await page.locator('[name="tags"]').fill(originalTags);
+            await page.locator('[name="is_hot"]').setChecked(originalHot);
+            await page
+                .locator('[name="is_featured"]')
+                .setChecked(originalFeatured);
+            await page.locator('[name="banner"]').setInputFiles({
+                name: "original-banner.jpg",
+                mimeType: "image/jpeg",
+                buffer: originalBanner,
+            });
+            await Promise.all([
+                page.waitForNavigation(),
+                page
+                    .getByRole("button", { name: "Lưu phim", exact: true })
+                    .click(),
+            ]);
             await page.goto("/admin/news.php");
             await inspect(page, `${device}-admin-news`);
             await page.goto("/admin/news-edit.php");
@@ -506,10 +718,47 @@ async function login(page, admin = false) {
             assert.deepEqual(errors, [], `${device}: browser errors`);
             await context.close();
         }
+        const reduced = await browser.newContext({
+            baseURL,
+            viewport: { width: 390, height: 844 },
+            reducedMotion: "reduce",
+        });
+        const reducedPage = await reduced.newPage();
+        await reducedPage.goto("/");
+        assert.equal(
+            await reducedPage
+                .locator(".carousel-caption h2")
+                .first()
+                .evaluate((element) => getComputedStyle(element).animationName),
+            "none",
+        );
+        await reducedPage.locator("[data-carousel-next]").click();
+        assert.equal(await reducedPage.locator(".button-ripple").count(), 0);
+        assert(await reducedPage.locator("[data-slide]").nth(1).isVisible());
+        await inspect(reducedPage, "reduced-motion-home");
+        await reduced.close();
+        const noScripts = await browser.newContext({
+            baseURL,
+            viewport: { width: 1440, height: 960 },
+            javaScriptEnabled: false,
+        });
+        const noScriptsPage = await noScripts.newPage();
+        await noScriptsPage.goto("/");
+        assert.equal(
+            await noScriptsPage.locator("#movies .movie-card").count(),
+            4,
+        );
+        assert(
+            await noScriptsPage
+                .locator(".carousel-caption h2")
+                .first()
+                .isVisible(),
+        );
+        await noScripts.close();
         const failures = results.filter((result) => result.violations.length);
         assert.equal(failures.length, 0, JSON.stringify(failures));
         console.log(
-            `PASS UI: ${results.length} desktop/mobile pages, movies, news scrolling and admin publish/edit/image/hide, carousel, search, checkout, stubbed VNPay/IPN, archive, navigation, accessibility, no browser errors.`,
+            `PASS UI: ${results.length} desktop/mobile pages, tags, past/hot/monthly collections, movie editor, news scrolling and admin publish/edit/image/hide, full-width carousel, search, checkout, stubbed VNPay/IPN, archive, navigation, accessibility, no browser errors.`,
         );
     } finally {
         await browser.close();

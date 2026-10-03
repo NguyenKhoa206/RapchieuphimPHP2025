@@ -2,7 +2,7 @@
 
 Ứng dụng PHP/MySQL quản lý phim, rạp, phòng, lịch chiếu, đặt ghế, combo, thanh toán VNPay, lịch sử hóa đơn/vé và doanh thu. Bản này gom phần xử lý dùng chung, bỏ các trang HTML/file `copy` trùng lặp, và bổ sung luồng đặt vé lưu vào CSDL.
 
-Giao diện giữ phong cách nhánh `main` cũ: logo Galaxy, header trắng, banner phim lớn, tab gạch cam, poster bốn cột, nhóm phim sắp chiếu và footer đen. `public/assets/css/app.css` chứa thành phần dùng chung; `classic.css` chứa màu sắc/bố cục theo bản cũ. Tin/ưu đãi lấy từ CSDL, có thể vuốt/cuộn ngang, dùng nút hoặc bàn phím để xem bài khác; mỗi thẻ mở trang đọc bài. Các bài mẫu có nhãn minh họa và không xác nhận ưu đãi đang áp dụng.
+Giao diện giữ phong cách nhánh `main` cũ: logo Galaxy, nav phủ trên banner ảnh ngang tràn màn hình như `Galaxy.html`, tab gạch cam, poster bốn cột và footer đen. Các trang bên trong dùng header trắng. Danh mục có tag, phim sắp chiếu, phim hot, top tháng và phim cũ; nút có phản hồi nhấn/hover, banner và thẻ có animation nhẹ. Chế độ giảm chuyển động được tôn trọng. `public/assets/css/app.css` chứa thành phần dùng chung; `classic.css` chứa màu sắc/bố cục theo bản cũ. Tin/ưu đãi lấy từ CSDL, có thể vuốt/cuộn ngang, dùng nút hoặc bàn phím để xem bài khác; mỗi thẻ mở trang đọc bài. Các bài mẫu có nhãn minh họa và không xác nhận ưu đãi đang áp dụng.
 
 ## Yêu cầu
 
@@ -44,9 +44,21 @@ Trong admin, chọn **Tin & ưu đãi → Thêm bài viết**: nhập tiêu đ�
 "C:\xampp\php\php.exe" scripts\seed-content.php --include-movies
 ```
 
-Chạy từ thư mục dự án. Script chỉ thêm mẫu chưa có, không tự tạo suất chiếu; ngày phát hành/thời lượng/giới hạn tuổi là dữ liệu minh họa. Nếu chỉ cần bài mẫu, bỏ `--include-movies`. Không chạy lại `seed.php` trên CSDL có phim/rạp. Khi cài mới, seed có đủ tám phim của trang mẫu main cũ, gồm bốn đang chiếu và bốn sắp chiếu.
+Chạy từ thư mục dự án. Script chỉ thêm mẫu chưa có, không tự tạo suất chiếu; ngày phát hành/thời lượng/giới hạn tuổi là dữ liệu minh họa. Nếu chỉ cần bài mẫu, bỏ `--include-movies`. Không chạy lại `seed.php` trên CSDL có phim/rạp. Khi cài mới, seed có tám phim của trang mẫu main cũ (bốn đang chiếu, bốn sắp chiếu) và ba phim cũ dùng ảnh ngang từ banner: Chainsaw Man, Tee Yod 2, Mưa Đỏ. Phần banner/tag/hot của mẫu được khởi tạo một lần; tùy chọn bạn đã lưu không bị ghi đè.
 
 Trong **Phim → Sửa**, có thể tải trailer MP4/WebM hoặc nhập đường dẫn HTTPS YouTube/youtu.be. Trailer tải lên được ưu tiên; đường dẫn YouTube được chuẩn hóa và mở bằng nút riêng. Phim có trailer mới hiện nút Trailer trên poster/banner; phim sắp chiếu mở thông tin thay vì giả lập đặt vé.
+
+## Banner, tag và các mục phim
+
+Cập nhật mã rồi chạy lại `php scripts/install.php` để thêm hai bảng hiển thị/tag, giữ dữ liệu phim đang có. `php scripts/seed-content.php --include-movies` bổ sung ba phim/banner cũ và tùy chọn hiển thị mẫu còn thiếu.
+
+Trong **Admin → Phim → Sửa**, nhập **Tag** ngăn cách bằng dấu phẩy, chọn **Hiển thị trong mục Phim hot** hoặc **Ưu tiên trên banner trang chủ**, tải **Ảnh banner ngang** rồi lưu. Nên dùng ảnh khoảng 1600 × 760 px; có thể bỏ ảnh banner để dùng lại poster. Tag kết hợp với tìm kiếm/trạng thái và được giữ khi phân trang. Tối đa 8 tag mỗi phim, mỗi tag 32 ký tự.
+
+- **Phim hot:** các phim do admin chọn; tối đa bốn phim trên trang chủ.
+- **Top tháng:** tối đa bốn phim theo số vé (`cinema_order_items.kind='seat'`) của đơn đã thanh toán trong tháng hiện tại, theo giờ Việt Nam và `paid_at`. Chỉ tính tiền quầy và VNPay production đã xác minh, loại demo/sandbox/đơn chưa trả tiền, không nhân theo combo hoặc số lần thanh toán. Chưa có vé thì hiển thị trạng thái chờ, không tự tạo lượt bán.
+- **Phim cũ:** phim còn công khai có ngày kết thúc trước hôm nay; mở thông tin/trailer. Phim bị admin ẩn không xuất hiện ở bất kỳ nhóm nào. Mẫu không tự tạo suất chiếu hay doanh số thật.
+
+Banner chuyển bằng nút, bàn phím hoặc vuốt ngang; không tự chuyển khi khách đang đọc. Animation dùng CSS/JS nội bộ, không tải thêm thư viện. Khi bật `prefers-reduced-motion`, hiệu ứng được tắt; nội dung vẫn đọc được nếu JavaScript chưa chạy.
 
 ## Chuyển từ bản cũ
 
@@ -97,6 +109,8 @@ DB_NAME=cinema_test php tests/run.php
 DB_NAME=cinema_test php tests/payments.php
 DB_NAME=cinema_test php tests/payment-concurrency.php
 DB_NAME=cinema_test php tests/history.php
+DB_NAME=cinema_test php tests/news.php
+DB_NAME=cinema_test php tests/catalog.php
 DB_NAME=cinema_test php tests/concurrency.php
 DB_NAME=cinema_migration_test php scripts/install.php
 DB_NAME=cinema_migration_test php tests/migration.php

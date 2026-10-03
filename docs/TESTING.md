@@ -6,6 +6,7 @@
 DB_NAME=cinema_test php scripts/install.php
 DB_NAME=cinema_test php tests/run.php
 DB_NAME=cinema_test php tests/news.php
+php tests/catalog.php
 DB_NAME=cinema_test php tests/concurrency.php
 DB_NAME=cinema_migration_test php scripts/install.php
 DB_NAME=cinema_migration_test php tests/migration.php
@@ -82,6 +83,10 @@ Chuẩn bị **CSDL UI mới** tên `cinema_ui_test`, đặt biến VNPay thử 
 
 Kiểm tra 1440×960 và 390×844: trang phim, chi tiết phim, tìm kiếm không có kết quả, đăng nhập, lịch, chọn ghế/tính giá, chuyển sang trang ngân hàng mô phỏng, IPN ký từ Node, vé đã thanh toán, danh sách vé, lịch sử, quản trị và doanh thu. Kiểm tra nút/bàn phím đổi banner, tìm phim từ header, menu tài khoản/hóa đơn cũ, tràn ngang, ảnh thiếu, JavaScript/CSP, mở/đóng menu và các luật WCAG A/AA bằng axe. `test-results/` chứa ảnh và báo cáo; CI tải lên artifact `cinema-ui-checks`. Kiểm tra tự động không chứng minh toàn bộ WCAG hay thay thế rà soát thị giác/thử merchant thật.
 
-Trang chủ được kiểm tra thêm ở 320/768/900/1024px để bắt lỗi tại ngưỡng đổi menu. Trang chọn ghế và tổng quan quản trị có thêm ảnh/axe ở 320px; sơ đồ ghế và bảng dữ liệu được phép cuộn trong vùng riêng, toàn trang không tràn ngang.
+Trang chủ được kiểm tra thêm ở 320/768/900/1024/1920px để bắt lỗi tại ngưỡng đổi menu. Trang chọn ghế và tổng quan quản trị có thêm ảnh/axe ở 320px; sơ đồ ghế và bảng dữ liệu được phép cuộn trong vùng riêng, toàn trang không tràn ngang.
 
 Bộ kiểm thử chặn POST `/payment/start.php`, thực hiện request đến PHP với `maxRedirects: 0`, xác minh phản hồi 303/URL/số tiền/chữ ký rồi thay phản hồi trong trình duyệt bằng trang ngân hàng mô phỏng tại cùng URL. Cách này dừng trước khi gọi nhà cung cấp; không xác minh giao diện ngân hàng hoặc toàn bộ bước chuyển trang khác nguồn của một giao dịch merchant thật. Ứng dụng vẫn trả 303 bình thường ngoài kiểm thử.
+
+Kiểm tra danh mục (`tests/catalog.php`) xác nhận tag và tìm kiếm/trạng thái kết hợp, phân trang, tùy chọn banner/hot giữ khi sửa qua luồng cũ, và top tháng tính vé đúng ở ranh giới tháng. Top không cộng combo, bản ghi payment lặp, giao dịch demo/sandbox, đơn chưa thanh toán hoặc thời gian tương lai. `tests/news.php` còn xác nhận nhập mẫu lại không bật lại cờ hot/banner hoặc khôi phục tag đã bỏ.
+
+Kiểm tra UI xác nhận nav phủ banner ảnh ngang tràn viewport, tag và phim cũ, hot/top tháng, upload/bỏ banner và tag trong admin, nội dung vẫn hiện khi tắt JavaScript, và animation bị tắt khi người dùng chọn giảm chuyển động. Bản UI fixture có hai đơn quầy giả lập trong CSDL `_test` để kiểm tra bảng top; seed thông thường không tạo giao dịch.

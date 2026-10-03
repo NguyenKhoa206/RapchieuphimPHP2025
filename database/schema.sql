@@ -61,6 +61,21 @@ CREATE TABLE IF NOT EXISTS cinema_movies (
     active TINYINT NOT NULL DEFAULT 1,
     INDEX movie_dates (active, release_date, end_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- Separate display settings preserve existing movie columns during upgrades.
+CREATE TABLE IF NOT EXISTS cinema_movie_display (
+    movie_id BIGINT UNSIGNED PRIMARY KEY,
+    banner VARCHAR(255) NULL,
+    is_featured TINYINT NOT NULL DEFAULT 0,
+    is_hot TINYINT NOT NULL DEFAULT 0,
+    FOREIGN KEY (movie_id) REFERENCES cinema_movies(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS cinema_movie_tags (
+    movie_id BIGINT UNSIGNED NOT NULL,
+    tag VARCHAR(32) NOT NULL,
+    PRIMARY KEY (movie_id, tag),
+    INDEX movie_tag (tag, movie_id),
+    FOREIGN KEY (movie_id) REFERENCES cinema_movies(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE TABLE IF NOT EXISTS cinema_cinemas (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(190) NOT NULL,

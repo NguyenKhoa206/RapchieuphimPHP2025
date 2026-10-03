@@ -22,10 +22,11 @@ $links = $adminShell ? [
     'index.php' => ['Home', 'film', ['index.php']],
     'showtimes.php' => ['Đặt vé', 'ticket', ['showtimes.php', 'booking.php']],
     'index.php#movies' => ['Phim', 'film', ['movie.php']],
-    'news.php' => ['Tin mới & ưu đãi', 'news', ['news.php', 'news-detail.php']],
+    ($homePage ? 'index.php#tinmoi' : 'news.php') => ['Tin mới & ưu đãi', 'news', ['news.php', 'news-detail.php']],
 ];
 $headerSearch = $current === 'index.php' && is_string($_GET['q'] ?? null) ? mb_substr(trim($_GET['q']), 0, 120) : '';
-$headerStatus = in_array($_GET['status'] ?? 'showing', ['showing', 'upcoming', 'all'], true) ? ($_GET['status'] ?? 'showing') : 'showing';
+$headerStatus = in_array($_GET['status'] ?? 'showing', ['showing', 'upcoming', 'past', 'all'], true) ? ($_GET['status'] ?? 'showing') : 'showing';
+$headerTag = $homePage && is_string($_GET['tag'] ?? null) ? mb_substr(trim($_GET['tag']), 0, 32) : '';
 ?>
 <!doctype html>
 <html lang="vi">
@@ -39,7 +40,7 @@ $headerStatus = in_array($_GET['status'] ?? 'showing', ['showing', 'upcoming', '
     <link rel="stylesheet" href="<?= e(asset_url('assets/css/classic.css')) ?>">
     <script src="<?= e(asset_url('assets/js/app.js')) ?>" defer></script>
 </head>
-<body class="<?= $adminShell ? 'admin-shell' : 'customer-shell' ?>">
+<body class="<?= $adminShell ? 'admin-shell' : 'customer-shell' ?><?= $homePage && !$adminShell ? ' home-shell' : '' ?>">
 <a class="skip-link" href="#main">Đến nội dung</a>
 <header class="site-header">
     <div class="container header-row">
@@ -55,6 +56,7 @@ $headerStatus = in_array($_GET['status'] ?? 'showing', ['showing', 'upcoming', '
             <a class="mobile-tickets-link" href="<?= e(url('account/tickets.php')) ?>">Vé của tôi</a>
             <form method="get" action="<?= e(url('index.php')) ?>" class="header-search">
                 <input type="hidden" name="status" value="<?= e($headerStatus) ?>">
+                <?php if ($headerTag !== ''): ?><input type="hidden" name="tag" value="<?= e($headerTag) ?>"><?php endif; ?>
                 <label for="header-search" class="sr-only">Tìm phim hoặc thể loại</label>
                 <input id="header-search" type="search" name="q" maxlength="120" placeholder="Tìm phim rạp…" value="<?= e($headerSearch) ?>">
                 <button type="submit" aria-label="Tìm phim"><?= icon('search') ?></button>

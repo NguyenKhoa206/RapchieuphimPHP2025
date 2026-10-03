@@ -76,7 +76,7 @@ foreach ([0, 2, 4, 7] as $index) {
 $before = D::all('SELECT * FROM cinema_movies ORDER BY id');
 $command = escapeshellarg(PHP_BINARY) . ' -c ' . escapeshellarg(php_ini_loaded_file()) . ' ' . escapeshellarg(APP_ROOT . '/scripts/seed-content.php') . ' --include-movies';
 exec($command, $output, $exitCode);
-news_check($exitCode === 0 && (int) D::one('SELECT COUNT(*) AS n FROM cinema_movies')['n'] === 8, 'Không bổ sung đủ phim main cũ.');
+news_check($exitCode === 0 && (int) D::one('SELECT COUNT(*) AS n FROM cinema_movies')['n'] === 11, 'Không bổ sung đủ phim main cũ.');
 foreach ($before as $film) {
     news_check(D::one('SELECT * FROM cinema_movies WHERE id=?', [$film['id']]) === $film, 'Ghi đè phim đã có.');
 }
@@ -84,6 +84,11 @@ news_check((int) D::one('SELECT COUNT(*) AS n FROM cinema_news WHERE is_demo=1')
 $sample = D::one('SELECT * FROM cinema_news ORDER BY id LIMIT 1');
 D::execute("UPDATE cinema_news SET title='Đã sửa riêng',status='hidden' WHERE id=?", [$sample['id']]);
 exec($command, $output, $exitCode);
-news_check($exitCode === 0 && (int) D::one('SELECT COUNT(*) AS n FROM cinema_movies')['n'] === 8 && (int) D::one('SELECT COUNT(*) AS n FROM cinema_news')['n'] === 8, 'Import mẫu lặp tạo bản ghi trùng.');
+news_check($exitCode === 0 && (int) D::one('SELECT COUNT(*) AS n FROM cinema_movies')['n'] === 11 && (int) D::one('SELECT COUNT(*) AS n FROM cinema_news')['n'] === 8, 'Import mẫu lặp tạo bản ghi trùng.');
 news_check(D::one('SELECT title,status FROM cinema_news WHERE id=?', [$sample['id']]) === ['title' => 'Đã sửa riêng', 'status' => 'hidden'], 'Import mẫu lặp đăng lại hoặc ghi đè bài đã sửa.');
+$sampleMovie = D::one('SELECT * FROM cinema_movies ORDER BY id LIMIT 1');
+D::execute('UPDATE cinema_movie_display SET is_hot=0,is_featured=0,banner=NULL WHERE movie_id=?', [$sampleMovie['id']]);
+D::execute('DELETE FROM cinema_movie_tags WHERE movie_id=?', [$sampleMovie['id']]);
+exec($command, $output, $exitCode);
+news_check($exitCode === 0 && D::one('SELECT banner,is_hot,is_featured FROM cinema_movie_display WHERE movie_id=?', [$sampleMovie['id']]) === ['banner' => null, 'is_hot' => 0, 'is_featured' => 0] && D::all('SELECT tag FROM cinema_movie_tags WHERE movie_id=?', [$sampleMovie['id']]) === [], 'Import mẫu ghi đè tùy chọn đã bỏ và tag rỗng.');
 echo "PASS NEWS: $checks kiểm tra bản nháp, đăng/ẩn/hẹn giờ/hết hạn, nội dung UTF-8, phân trang và mẫu main cũ không ghi đè.\n";

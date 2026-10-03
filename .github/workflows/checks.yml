@@ -51,6 +51,7 @@ jobs:
           php tests/payment-concurrency.php
           php tests/history.php
           php tests/news.php
+          php tests/catalog.php
           php tests/concurrency.php
       - name: Check legacy migration
         env:

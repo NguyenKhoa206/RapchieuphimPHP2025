@@ -6,6 +6,7 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 require dirname(__DIR__) . '/app/bootstrap.php';
+require __DIR__ . '/lib/demo.php';
 use App\Support\Database as D;
 use App\Services\CinemaService as C;
 
@@ -18,7 +19,8 @@ $db->beginTransaction();
 try {
     foreach ($films as $film) {
         [$title,$genre,$age,$duration,$poster,$days] = $film;
-        D::execute('INSERT INTO cinema_movies (title,genre,age_rating,duration,release_date,end_date,description,poster,trailer) VALUES (?,?,?,?,?,?,?,?,?)', [$title, $genre, $age, $duration, date('Y-m-d', strtotime('+' . $days . ' days')), date('Y-m-d', strtotime('+' . ($days + 60) . ' days')), 'Dữ liệu minh họa cho đồ án; lịch phát hành, giới hạn tuổi và thời lượng trong bản mẫu không phải lịch chiếu thực tế.', $poster, $film['trailer'] ?? null]);
+        D::execute('INSERT INTO cinema_movies (title,genre,age_rating,duration,release_date,end_date,description,poster,trailer) VALUES (?,?,?,?,?,?,?,?,?)', [$title, $genre, $age, $duration, date('Y-m-d', strtotime($days . ' days')), date('Y-m-d', strtotime(($days + 60) . ' days')), 'Dữ liệu minh họa cho đồ án; lịch phát hành, giới hạn tuổi và thời lượng trong bản mẫu không phải lịch chiếu thực tế.', $poster, $film['trailer'] ?? null]);
+        seed_movie_display((int) $db->lastInsertId(), $film);
     }
     foreach ([['Galaxy Quang Trung', 'Quang Trung, TP. Hồ Chí Minh'], ['Galaxy Nguyễn Du', 'Nguyễn Du, TP. Hồ Chí Minh']] as [$name,$address]) {
         D::execute('INSERT INTO cinema_cinemas (name,address,phone) VALUES (?,?,?)', [$name, $address, '0900000000']);

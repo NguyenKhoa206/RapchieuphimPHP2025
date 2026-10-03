@@ -25,6 +25,9 @@ function icon(string $name): string
         'menu' => '<path d="M4 6h16M4 12h16M4 18h16"/>',
         'user' => '<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',
         'check' => '<path d="m4 12 5 5L20 6"/>',
+        'filter' => '<path d="M4 5h16l-6 7v6l-4 2v-8z"/>',
+        'fire' => '<path d="M12 3c1 5 7 7 7 12a7 7 0 0 1-14 0c0-3 2-5 4-7 0 3 1 4 2 4 2-3 2-6 1-9z"/>',
+        'award' => '<circle cx="12" cy="8" r="5"/><path d="m8 12-2 9 6-3 6 3-2-9"/>',
         'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     ];
     return '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ($paths[$name] ?? $paths['ticket']) . '</svg>';

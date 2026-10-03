@@ -9,23 +9,112 @@ use App\Support\Upload;
 
 final class CinemaService
 {
-    public static function movies(string $search = '', string $status = 'showing', int $page = 1): array
+    private const DISPLAY_JOIN = ' LEFT JOIN cinema_movie_display d ON d.movie_id=m.id';
+    private const MOVIE_COLUMNS = 'm.*,d.banner,COALESCE(d.is_hot,0) AS is_hot,COALESCE(d.is_featured,0) AS is_featured';
+
+    public static function movies(string $search = '', string $status = 'showing', int $page = 1, string $tag = ''): array
     {
-        $where = 'active=1';
+        $where = 'm.active=1';
         $params = [];
         if ($status === 'upcoming') {
-            $where .= ' AND release_date>CURDATE()';
+            $where .= ' AND m.release_date>CURDATE()';
+        } elseif ($status === 'past') {
+            $where .= ' AND m.end_date<CURDATE()';
         } elseif ($status === 'showing') {
-            $where .= ' AND release_date<=CURDATE() AND end_date>=CURDATE()';
+            $where .= ' AND m.release_date<=CURDATE() AND m.end_date>=CURDATE()';
         }
         if ($search !== '') {
-            $where .= ' AND (title LIKE ? OR genre LIKE ?)';
+            $where .= ' AND (m.title LIKE ? OR m.genre LIKE ?)';
             $params = ['%' . $search . '%', '%' . $search . '%'];
         }
-        $total = (int) D::one("SELECT COUNT(*) AS n FROM cinema_movies WHERE $where", $params)['n'];
+        if ($tag !== '') {
+            $where .= ' AND EXISTS (SELECT 1 FROM cinema_movie_tags t WHERE t.movie_id=m.id AND t.tag=?)';
+            $params[] = $tag;
+        }
+        $total = (int) D::one("SELECT COUNT(*) AS n FROM cinema_movies m WHERE $where", $params)['n'];
         $page = max(1, min($page, max(1, (int) ceil($total / 12))));
         $offset = ($page - 1) * 12;
-        return ['items' => D::all("SELECT * FROM cinema_movies WHERE $where ORDER BY release_date DESC,id DESC LIMIT 12 OFFSET $offset", $params), 'total' => $total, 'page' => $page];
+        $order = $status === 'upcoming' ? 'm.release_date ASC,m.id ASC' : 'm.release_date DESC,m.id DESC';
+        $rows = D::all('SELECT ' . self::MOVIE_COLUMNS . ' FROM cinema_movies m' . self::DISPLAY_JOIN . " WHERE $where ORDER BY $order LIMIT 12 OFFSET $offset", $params);
+        return ['items' => self::withTags($rows), 'total' => $total, 'page' => $page];
+    }
+
+    private static function withTags(array $movies): array
+    {
+        if (!$movies) {
+            return [];
+        }
+        $ids = array_column($movies, 'id');
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $tags = [];
+        foreach (D::all("SELECT movie_id,tag FROM cinema_movie_tags WHERE movie_id IN ($placeholders) ORDER BY tag", $ids) as $row) {
+            $tags[$row['movie_id']][] = $row['tag'];
+        }
+        foreach ($movies as &$movie) {
+            $movie['tags'] = $tags[$movie['id']] ?? [];
+        }
+        unset($movie);
+        return $movies;
+    }
+
+    public static function movie(int $id): ?array
+    {
+        $rows = D::all('SELECT ' . self::MOVIE_COLUMNS . ' FROM cinema_movies m' . self::DISPLAY_JOIN . ' WHERE m.id=? AND m.active=1', [$id]);
+        return self::withTags($rows)[0] ?? null;
+    }
+
+    public static function tagOptions(): array
+    {
+        return array_column(D::all('SELECT t.tag,COUNT(*) AS n FROM cinema_movie_tags t JOIN cinema_movies m ON m.id=t.movie_id WHERE m.active=1 GROUP BY t.tag ORDER BY n DESC,t.tag LIMIT 16'), 'tag');
+    }
+
+    public static function parseTags(string $value): array
+    {
+        if (mb_strlen($value) > 300) {
+            throw new \DomainException('Tối đa 8 tag, mỗi tag dài tối đa 32 ký tự.');
+        }
+        $tags = [];
+        foreach (explode(',', $value) as $tag) {
+            $tag = preg_replace('/\s+/u', ' ', trim($tag));
+            if ($tag === '') {
+                continue;
+            }
+            if (!$tag || mb_strlen($tag) > 32 || !preg_match('/^[\p{L}\p{N} &+\-]+$/u', $tag)) {
+                throw new \DomainException('Tag chỉ gồm chữ, số, khoảng trắng hoặc dấu &, +, -.');
+            }
+            $tags[mb_strtolower($tag)] ??= $tag;
+        }
+        if (count($tags) > 8) {
+            throw new \DomainException('Mỗi phim có tối đa 8 tag.');
+        }
+        return array_values($tags);
+    }
+
+    public static function featured(): array
+    {
+        $rows = D::all('SELECT ' . self::MOVIE_COLUMNS . ' FROM cinema_movies m' . self::DISPLAY_JOIN . ' WHERE m.active=1 ORDER BY is_featured DESC,(m.release_date<=CURDATE() AND m.end_date>=CURDATE()) DESC,m.release_date DESC,m.id ASC LIMIT 3');
+        return self::withTags($rows);
+    }
+
+    public static function hot(): array
+    {
+        return self::withTags(D::all('SELECT ' . self::MOVIE_COLUMNS . ' FROM cinema_movies m' . self::DISPLAY_JOIN . ' WHERE m.active=1 AND d.is_hot=1 ORDER BY m.release_date DESC,m.id DESC LIMIT 4'));
+    }
+
+    public static function monthlyTop(): array
+    {
+        $start = date('Y-m-01') . ' 00:00:00';
+        $end = date('Y-m-d H:i:s', strtotime('first day of next month 00:00:00'));
+        // Aggregate seat quantities first: combos and payment attempts must not
+        // multiply ticket counts. Demo and sandbox payments are excluded.
+        $ranked = "SELECT s.movie_id,SUM(i.quantity) AS tickets FROM cinema_orders o
+            JOIN cinema_showtimes s ON s.id=o.showtime_id
+            JOIN cinema_order_items i ON i.order_id=o.id AND i.kind='seat'
+            WHERE o.status='paid' AND o.paid_at>=? AND o.paid_at<? AND o.paid_at<=NOW()
+            AND (o.payment_method='counter' OR (o.payment_method='vnpay' AND EXISTS
+                (SELECT 1 FROM cinema_payments p WHERE p.order_id=o.id AND p.status='paid' AND p.environment='production')))
+            GROUP BY s.movie_id HAVING tickets>0";
+        return self::withTags(D::all('SELECT ' . self::MOVIE_COLUMNS . ',ranking.tickets FROM cinema_movies m' . self::DISPLAY_JOIN . " JOIN ($ranked) ranking ON ranking.movie_id=m.id WHERE m.active=1 ORDER BY ranking.tickets DESC,m.id ASC LIMIT 4", [$start, $end]));
     }
 
     public static function showtimes(?int $movie = null, ?string $date = null, ?int $cinema = null): array
@@ -65,17 +154,21 @@ final class CinemaService
         if ($url !== '' && !$externalTrailer) {
             throw new \DomainException('Trailer phải là đường dẫn HTTPS của YouTube hoặc youtu.be.');
         }
+        $tags = array_key_exists('tags', $input) ? self::parseTags(is_string($input['tags']) ? $input['tags'] : '') : null;
         $db = db();
         $poster = null;
         $trailer = null;
+        $banner = null;
         try {
             $poster = Upload::save('poster', 'image');
             $trailer = Upload::save('trailer', 'video');
+            $banner = Upload::save('banner', 'image');
             $db->beginTransaction();
             $old = $id ? D::one('SELECT * FROM cinema_movies WHERE id=? AND active=1 FOR UPDATE', [$id]) : null;
             if ($id && !$old) {
                 throw new \DomainException('Không tìm thấy phim.');
             }
+            $display = $id ? D::one('SELECT * FROM cinema_movie_display WHERE movie_id=?', [$id]) : null;
             if ($old && ($old['duration'] != $input['duration'] || $old['release_date'] !== $input['release_date'] || $old['end_date'] !== $input['end_date'])
                 && D::one('SELECT id FROM cinema_showtimes WHERE movie_id=? AND active=1 AND starts_at>NOW() LIMIT 1', [$id])) {
                 throw new \DomainException('Phim đã có lịch chiếu tương lai. Hãy hủy các lịch chưa bán vé trước khi sửa thời lượng hoặc ngày phát hành.');
@@ -85,6 +178,19 @@ final class CinemaService
                 D::execute('UPDATE cinema_movies SET title=?,genre=?,age_rating=?,duration=?,release_date=?,end_date=?,description=?,poster=?,trailer=? WHERE id=?', [...$values, $id]);
             } else {
                 D::execute('INSERT INTO cinema_movies (title,genre,age_rating,duration,release_date,end_date,description,poster,trailer) VALUES (?,?,?,?,?,?,?,?,?)', $values);
+                $id = (int) $db->lastInsertId();
+            }
+            $cover = $banner ?? (($input['remove_banner'] ?? '') === '1' ? null : ($display['banner'] ?? null));
+            if ($tags !== null || $banner || array_key_exists('is_hot', $input) || array_key_exists('is_featured', $input) || array_key_exists('remove_banner', $input)) {
+                $hot = array_key_exists('is_hot', $input) ? (($input['is_hot'] ?? '') === '1' ? 1 : 0) : ($display['is_hot'] ?? 0);
+                $featured = array_key_exists('is_featured', $input) ? (($input['is_featured'] ?? '') === '1' ? 1 : 0) : ($display['is_featured'] ?? 0);
+                D::execute('INSERT INTO cinema_movie_display (movie_id,banner,is_hot,is_featured) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE banner=VALUES(banner),is_hot=VALUES(is_hot),is_featured=VALUES(is_featured)', [$id, $cover, $hot, $featured]);
+            }
+            if ($tags !== null) {
+                D::execute('DELETE FROM cinema_movie_tags WHERE movie_id=?', [$id]);
+                foreach ($tags as $tag) {
+                    D::execute('INSERT IGNORE INTO cinema_movie_tags (movie_id,tag) VALUES (?,?)', [$id, $tag]);
+                }
             }
             $db->commit();
         } catch (\Throwable $error) {
@@ -93,6 +199,7 @@ final class CinemaService
             }
             Upload::remove($poster);
             Upload::remove($trailer);
+            Upload::remove($banner);
             throw $error;
         }
         if ($poster) {
@@ -100,6 +207,9 @@ final class CinemaService
         }
         if ($trailer || $externalTrailer) {
             Upload::remove($old['trailer'] ?? null);
+        }
+        if ($display && $display['banner'] !== $cover) {
+            Upload::remove($display['banner']);
         }
     }
 
