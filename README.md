@@ -4,6 +4,8 @@
 
 Giao diện giữ phong cách nhánh `main` cũ: logo Galaxy, nav phủ trên banner ảnh ngang tràn màn hình như `Galaxy.html`, tab gạch cam, poster bốn cột và footer đen. Các trang bên trong dùng header trắng. Danh mục có tag, phim sắp chiếu, phim hot, top tháng và phim cũ; nút có phản hồi nhấn/hover, banner và thẻ có animation nhẹ. Chế độ giảm chuyển động được tôn trọng. `public/assets/css/app.css` chứa thành phần dùng chung; `classic.css` chứa màu sắc/bố cục theo bản cũ. Tin/ưu đãi lấy từ CSDL, có thể vuốt/cuộn ngang, dùng nút hoặc bàn phím để xem bài khác; mỗi thẻ mở trang đọc bài. Các bài mẫu có nhãn minh họa và không xác nhận ưu đãi đang áp dụng.
 
+Nội dung, menu và biểu mẫu dùng **Be Vietnam Pro**; tiêu đề, banner và tên phim trên thẻ poster dùng **Oswald 600/700**. Font hỗ trợ dấu tiếng Việt, được lưu nội bộ dưới dạng WOFF2; cỡ chữ và giãn dòng thích ứng với điện thoại. Xem [font và giấy phép](public/assets/fonts/README.md). Khi cập nhật riêng giao diện/font, chép đủ thư mục `public/assets/fonts/`, CSS và layout rồi nhấn **Ctrl + F5**; không cần thay đổi CSDL.
+
 ## Yêu cầu
 
 - PHP 8.1 trở lên; đã kiểm thử với PHP 8.3.

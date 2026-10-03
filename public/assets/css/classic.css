@@ -7,13 +7,22 @@
     --radius: 8px;
     --shadow: 0 3px 14px #00000008;
 }
-body {
-    font-family: Arial, Helvetica, sans-serif;
-}
 h1,
 h2,
 h3 {
     letter-spacing: 0;
+}
+.customer-shell h1,
+.customer-shell h2,
+.movie-card-copy h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0.015em;
+}
+.customer-shell .footer-grid h2 {
+    font-family: var(--font-body);
+    font-weight: 700;
 }
 .site-header {
     background: #fff;
@@ -285,8 +294,10 @@ textarea {
     margin-bottom: 14px;
 }
 .carousel-caption h2 {
-    font-size: clamp(2rem, 3.4vw, 3.4rem);
-    line-height: 1.15;
+    font-size: clamp(2.5rem, 4.4vw, 4.6rem);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.035em;
     text-transform: uppercase;
     max-width: 650px;
     margin-bottom: 20px;
@@ -391,7 +402,7 @@ textarea {
 .promotions h2 {
     border-left: 5px solid #fe5e01;
     padding-left: 12px;
-    font-size: 23px;
+    font-size: 28px;
     margin-bottom: 0;
 }
 .catalog-heading .tabs {
@@ -431,7 +442,9 @@ textarea {
 }
 .movie-card-copy h3 {
     margin: 7px 0 8px;
-    font-size: 17px;
+    font-size: 21px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 .movie-release {
     color: var(--orange-dark);
@@ -499,7 +512,7 @@ textarea {
     padding-bottom: 48px;
 }
 .upcoming-catalog h2 {
-    font-size: 23px;
+    font-size: 28px;
     border-left: 5px solid #fe5e01;
     padding-left: 12px;
 }
@@ -874,7 +887,7 @@ textarea {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 23px;
+    font-size: 28px;
     border-left: 5px solid #fe5e01;
     padding-left: 12px;
     margin-bottom: 0;
@@ -1240,7 +1253,7 @@ textarea {
         padding: 150px 12px 88px;
     }
     .carousel-caption h2 {
-        font-size: clamp(1.75rem, 7.5vw, 2.2rem);
+        font-size: clamp(2.2rem, 9vw, 3rem);
         margin-bottom: 12px;
     }
     .carousel-caption p {
@@ -1272,7 +1285,7 @@ textarea {
         margin-bottom: 22px;
     }
     .catalog-heading h2 {
-        font-size: 20px;
+        font-size: 23px;
         margin-bottom: 0;
     }
     .catalog-heading .tabs {
@@ -1289,7 +1302,7 @@ textarea {
         padding-block: 30px;
     }
     .movie-collection h2 {
-        font-size: 19px;
+        font-size: 23px;
     }
     .movie-collection .section-heading {
         align-items: flex-start;
@@ -1349,7 +1362,7 @@ textarea {
         padding-top: 12px;
     }
     .movie-card-copy h3 {
-        font-size: 14px;
+        font-size: 18px;
     }
     .movie-release {
         font-size: 10px;
@@ -1369,13 +1382,13 @@ textarea {
         padding-bottom: 34px;
     }
     .upcoming-catalog h2 {
-        font-size: 19px;
+        font-size: 23px;
     }
     .promotions {
         padding: 30px 0 36px;
     }
     .promotions h2 {
-        font-size: 19px;
+        font-size: 23px;
     }
     .promotions .muted {
         font-size: 12px;

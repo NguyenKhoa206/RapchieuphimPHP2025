@@ -36,6 +36,9 @@ $headerTag = $homePage && is_string($_GET['tag'] ?? null) ? mb_substr(trim($_GET
     <meta name="theme-color" content="#ffffff">
     <title><?= e($pageTitle) ?></title>
     <link rel="icon" type="image/png" href="<?= e(url('assets/images/galaxy-logo-mobile-074abeac.png')) ?>">
+    <link rel="preload" href="<?= e(url('assets/fonts/be-vietnam-pro/be-vietnam-pro-400.woff2')) ?>" as="font" type="font/woff2" crossorigin>
+    <?php if (!$adminShell): ?><link rel="preload" href="<?= e(url('assets/fonts/oswald/oswald-variable.woff2')) ?>" as="font" type="font/woff2" crossorigin><?php endif; ?>
+    <link rel="stylesheet" href="<?= e(asset_url('assets/css/fonts.css')) ?>">
     <link rel="stylesheet" href="<?= e(asset_url('assets/css/app.css')) ?>">
     <link rel="stylesheet" href="<?= e(asset_url('assets/css/classic.css')) ?>">
     <script src="<?= e(asset_url('assets/js/app.js')) ?>" defer></script>

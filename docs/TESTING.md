@@ -85,6 +85,8 @@ Kiểm tra 1440×960 và 390×844: trang phim, chi tiết phim, tìm kiếm khô
 
 Trang chủ được kiểm tra thêm ở 320/768/900/1024/1920px để bắt lỗi tại ngưỡng đổi menu. Trang chọn ghế và tổng quan quản trị có thêm ảnh/axe ở 320px; sơ đồ ghế và bảng dữ liệu được phép cuộn trong vùng riêng, toàn trang không tràn ngang.
 
+Trước khi đo bố cục hoặc chụp ảnh, bộ UI đợi font nội bộ tải xong. Be Vietnam Pro ở mọi trang và Oswald ở trang khách phải tải/giải mã thành công với chuỗi có dấu tiếng Việt; lỗi font làm kiểm thử thất bại. Font đầy đủ được kiểm tra cmap khi đưa vào dự án, gồm chữ hoa/thường với mọi thanh tiếng Việt, dấu tổ hợp và ký hiệu đồng. Không dùng CDN font trong trình duyệt.
+
 Bộ kiểm thử chặn POST `/payment/start.php`, thực hiện request đến PHP với `maxRedirects: 0`, xác minh phản hồi 303/URL/số tiền/chữ ký rồi thay phản hồi trong trình duyệt bằng trang ngân hàng mô phỏng tại cùng URL. Cách này dừng trước khi gọi nhà cung cấp; không xác minh giao diện ngân hàng hoặc toàn bộ bước chuyển trang khác nguồn của một giao dịch merchant thật. Ứng dụng vẫn trả 303 bình thường ngoài kiểm thử.
 
 Kiểm tra danh mục (`tests/catalog.php`) xác nhận tag và tìm kiếm/trạng thái kết hợp, phân trang, tùy chọn banner/hot giữ khi sửa qua luồng cũ, và top tháng tính vé đúng ở ranh giới tháng. Top không cộng combo, bản ghi payment lặp, giao dịch demo/sandbox, đơn chưa thanh toán hoặc thời gian tương lai. `tests/news.php` còn xác nhận nhập mẫu lại không bật lại cờ hot/banner hoặc khôi phục tag đã bỏ.

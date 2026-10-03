@@ -31,6 +31,38 @@ function signParams(params) {
 
 async function inspect(page, name) {
     await page.locator("h1").waitFor();
+    const typography = await page.evaluate(async () => {
+        const sample = "Đặt vé · Ưu đãi · Phim chiếu rạp · Ắ Ấ Ế Ố Ớ Ứ Ỹ";
+        const bodyFaces = await document.fonts.load(
+            '400 16px "Be Vietnam Pro"',
+            sample,
+        );
+        const displayFaces = document.body.matches(".customer-shell")
+            ? await document.fonts.load('600 24px "Oswald"', sample)
+            : [];
+        await document.fonts.ready;
+        return {
+            bodyLoaded: bodyFaces.some((face) => face.status === "loaded"),
+            displayLoaded: displayFaces.some(
+                (face) => face.status === "loaded",
+            ),
+            customerPage: document.body.matches(".customer-shell"),
+            errors: [...document.fonts]
+                .filter((face) => face.status === "error")
+                .map((face) => `${face.family} ${face.weight}`),
+        };
+    });
+    assert(typography.bodyLoaded, `${name}: body font failed to load`);
+    if (typography.customerPage)
+        assert(
+            typography.displayLoaded,
+            `${name}: display font failed to load`,
+        );
+    assert.deepEqual(
+        typography.errors,
+        [],
+        `${name}: font decoding/loading errors`,
+    );
     await page.evaluate(async () => {
         await Promise.all(
             [...document.images].map(async (img) => {
@@ -88,7 +120,7 @@ async function inspect(page, name) {
         fullPage: true,
         animations: "disabled",
     });
-    results.push({ name, violations });
+    results.push({ name, typography, violations });
     fs.writeFileSync(
         "test-results/ui-report.json",
         JSON.stringify(results, null, 2),
@@ -758,7 +790,7 @@ async function login(page, admin = false) {
         const failures = results.filter((result) => result.violations.length);
         assert.equal(failures.length, 0, JSON.stringify(failures));
         console.log(
-            `PASS UI: ${results.length} desktop/mobile pages, tags, past/hot/monthly collections, movie editor, news scrolling and admin publish/edit/image/hide, full-width carousel, search, checkout, stubbed VNPay/IPN, archive, navigation, accessibility, no browser errors.`,
+            `PASS UI: ${results.length} desktop/mobile pages, self-hosted fonts loaded before layout checks, tags, past/hot/monthly collections, movie editor, news scrolling and admin publish/edit/image/hide, full-width carousel, search, checkout, stubbed VNPay/IPN, archive, navigation, accessibility, no browser errors.`,
         );
     } finally {
         await browser.close();

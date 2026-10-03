@@ -1,0 +1,43 @@
+/* Self-hosted fonts; licenses and source details live in ../fonts/. */
+@font-face {
+    font-family: "Be Vietnam Pro";
+    src: url("../fonts/be-vietnam-pro/be-vietnam-pro-400.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Be Vietnam Pro";
+    src: url("../fonts/be-vietnam-pro/be-vietnam-pro-500.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Be Vietnam Pro";
+    src: url("../fonts/be-vietnam-pro/be-vietnam-pro-600.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Be Vietnam Pro";
+    src: url("../fonts/be-vietnam-pro/be-vietnam-pro-700.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Be Vietnam Pro";
+    src: url("../fonts/be-vietnam-pro/be-vietnam-pro-800.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Oswald";
+    src: url("../fonts/oswald/oswald-variable.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 200 700;
+    font-display: swap;
+}
