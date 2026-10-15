@@ -21,7 +21,6 @@ return [
             'environment' => getenv('VNPAY_ENVIRONMENT') ?: 'sandbox',
             'tmn_code' => getenv('VNPAY_TMN_CODE') ?: '',
             'hash_secret' => getenv('VNPAY_HASH_SECRET') ?: '',
-            // Explicit URL avoids building payment callbacks from an untrusted Host header.
             'return_url' => getenv('VNPAY_RETURN_URL') ?: '',
         ],
     ],
