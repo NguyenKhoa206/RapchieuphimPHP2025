@@ -1,123 +1,453 @@
-# Rạp chiếu phim PHP
+# 🎬 Galaxy Cinema — Hệ thống đặt vé PHP 2025
 
-Ứng dụng PHP/MySQL quản lý phim, rạp, phòng, lịch chiếu, đặt ghế, combo, thanh toán VNPay, lịch sử hóa đơn/vé và doanh thu. Bản này gom phần xử lý dùng chung, bỏ các trang HTML/file `copy` trùng lặp, và bổ sung luồng đặt vé lưu vào CSDL.
+> Hệ thống đặt vé xem phim trực tuyến xây dựng bằng PHP thuần, hỗ trợ đặt vé, chọn ghế, thanh toán VNPay và quản trị rạp chiếu phim toàn diện.
 
-Giao diện giữ phong cách nhánh `main` cũ: logo Galaxy, nav phủ trên banner ảnh ngang tràn màn hình như `Galaxy.html`, tab gạch cam, poster bốn cột và footer đen. Các trang bên trong dùng header trắng. Danh mục có tag, phim sắp chiếu, phim hot, top tháng và phim cũ; nút có phản hồi nhấn/hover, banner và thẻ có animation nhẹ. Chế độ giảm chuyển động được tôn trọng. `public/assets/css/app.css` chứa thành phần dùng chung; `classic.css` chứa màu sắc/bố cục theo bản cũ. Tin/ưu đãi lấy từ CSDL, có thể vuốt/cuộn ngang, dùng nút hoặc bàn phím để xem bài khác; mỗi thẻ mở trang đọc bài. Các bài mẫu có nhãn minh họa và không xác nhận ưu đãi đang áp dụng.
+![PHP](https://img.shields.io/badge/PHP-7.4+-777BB4?style=flat&logo=php&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-5.7+-4479A1?style=flat&logo=mysql&logoColor=white)
+![Apache](https://img.shields.io/badge/Apache-XAMPP-CA2136?style=flat&logo=apache&logoColor=white)
 
-Nội dung, menu và biểu mẫu dùng **Be Vietnam Pro**; tiêu đề, banner và tên phim trên thẻ poster dùng **Oswald 600/700**. Font hỗ trợ dấu tiếng Việt, được lưu nội bộ dưới dạng WOFF2; cỡ chữ và giãn dòng thích ứng với điện thoại. Xem [font và giấy phép](public/assets/fonts/README.md). Khi cập nhật riêng giao diện/font, chép đủ thư mục `public/assets/fonts/`, CSS và layout rồi nhấn **Ctrl + F5**; không cần thay đổi CSDL.
+---
 
-## Yêu cầu
+## 📋 Mục lục
 
-- PHP 8.1 trở lên; đã kiểm thử với PHP 8.3.
-- MySQL 8 hoặc MariaDB 10.6 trở lên; các bảng dùng InnoDB, `utf8mb4`.
-- Extension PHP: `pdo_mysql`, `mbstring`, `fileinfo`. Bật upload nếu muốn thêm poster/trailer.
-- Không cần Node.js hoặc Composer để chạy ứng dụng.
+- [Tính năng](#-tính-năng)
+- [Yêu cầu hệ thống](#-yêu-cầu-hệ-thống)
+- [Cài đặt](#-cài-đặt)
+- [Cấu hình](#-cấu-hình)
+- [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
+- [Sử dụng](#-sử-dụng)
+- [Thanh toán VNPay](#-thanh-toán-vnpay)
+- [Import lịch sử cũ](#-import-lịch-sử-cũ)
+- [Chạy Tests](#-chạy-tests)
+- [Deploy](#-deploy)
+- [Bảo mật](#-bảo-mật)
 
-## Cài mới
+---
 
-1. Clone repository và vào thư mục dự án.
-2. Sao chép `config/local.example.php` thành `config/local.php`, sửa thông tin CSDL. Hoặc đặt biến môi trường `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`.
-3. Tạo bảng và dữ liệu minh họa:
+## ✨ Tính năng
+
+### 👤 Người dùng
+- 🎥 Xem danh sách phim đang chiếu & sắp chiếu
+- 🕐 Xem lịch chiếu theo rạp, phim, ngày
+- 💺 Đặt vé & chọn ghế ngồi trực quan (giữ ghế 15 phút)
+- 🛒 Thêm combo bắp nước vào đơn hàng
+- 💳 Thanh toán online qua **VNPay**
+- 🎫 Xem & in vé điện tử
+- 📜 Xem lịch sử đặt vé & hóa đơn cũ
+- 👤 Quản lý hồ sơ cá nhân & đổi mật khẩu
+- 📰 Đọc tin tức & khuyến mãi
+
+### 🛠️ Quản trị (Admin)
+- 🎬 Quản lý phim (thêm, sửa, xoá, upload poster)
+- 🏟️ Quản lý rạp chiếu & phòng chiếu
+- 🕐 Quản lý suất chiếu
+- 📦 Quản lý combo bắp nước
+- 📋 Quản lý đơn hàng & xác nhận thanh toán tại quầy
+- 💳 Quản lý thanh toán VNPay & đối soát
+- 👥 Quản lý người dùng
+- 📰 Quản lý tin tức
+- 📊 Báo cáo doanh thu (tại quầy / VNPay / Sandbox)
+- 📥 Import & đối soát lịch sử hóa đơn cũ
+
+---
+
+## 💻 Yêu cầu hệ thống
+
+| Phần mềm | Phiên bản tối thiểu |
+|---|---|
+| PHP | >= 7.4 |
+| MySQL | >= 5.7 |
+| Apache | >= 2.4 (có `mod_rewrite`, `AllowOverride All`) |
+| Node.js | >= 14.x *(để build assets)* |
+
+> **Khuyến nghị:** Cài [XAMPP](https://www.apachefriends.org/) để có PHP + MySQL + Apache đầy đủ.
+
+---
+
+## 🚀 Cài đặt
+
+### Bước 1: Lấy source code
 
 ```bash
+git clone https://github.com/NguyenKhoa206/RapchieuphimPHP2025.git
+```
+
+Hoặc copy thư mục vào XAMPP:
+```
+C:\xampp\htdocs\RapchieuphimPHP2025\
+```
+
+### Bước 2: Tạo database
+
+Mở **phpMyAdmin** (`http://localhost/phpmyadmin`) và tạo database:
+```sql
+CREATE DATABASE RapChieuPhim CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Sau đó import schema:
+```bash
+mysql -u root RapChieuPhim < database/schema.sql
+```
+
+### Bước 3: Cấu hình
+
+Copy file cấu hình mẫu:
+```bash
+# Windows
+copy config\local.example.php config\local.php
+
+# Linux/Mac
+cp config/local.example.php config/local.php
+```
+
+Chỉnh sửa `config/local.php` theo thông tin của bạn.
+
+### Bước 4: Chạy script cài đặt
+
+```
+http://localhost/RapchieuphimPHP2025/scripts/install.php
+```
+
+> Script này tạo các bảng cần thiết, an toàn khi chạy lại — không xóa dữ liệu cũ.
+
+### Bước 5: Tạo tài khoản Admin
+
+```
+http://localhost/RapchieuphimPHP2025/scripts/create-admin.php
+```
+
+### Bước 6: (Tuỳ chọn) Thêm dữ liệu mẫu
+
+```
+http://localhost/RapchieuphimPHP2025/scripts/seed.php
+http://localhost/RapchieuphimPHP2025/scripts/seed-content.php
+```
+
+### Bước 7: Truy cập hệ thống
+
+| Trang | URL |
+|---|---|
+| Trang chủ | `http://localhost/RapchieuphimPHP2025/` |
+| Trang Admin | `http://localhost/RapchieuphimPHP2025/public/admin/` |
+
+---
+
+## ⚙️ Cấu hình
+
+Chỉnh sửa `config/local.php` (file này **không được commit** lên Git):
+
+```php
+<?php
+return [
+    'database' => [
+        'host'     => '127.0.0.1',
+        'port'     => 3306,
+        'name'     => 'RapChieuPhim',
+        'user'     => 'root',
+        'password' => '',
+    ],
+
+    // Để trống để tự phát hiện. Ví dụ XAMPP thư mục con: '/RapchieuphimPHP2025/public'
+    'base_path' => '',
+
+    // Bật thanh toán demo (chỉ dùng khi phát triển)
+    'allow_demo_payment' => false,
+
+    'payments' => [
+        'vnpay' => [
+            'enabled'     => false,
+            'environment' => 'sandbox',   // sandbox | production
+            'tmn_code'    => '',           // Mã merchant 8 ký tự từ VNPay
+            'hash_secret' => '',           // Khóa bí mật từ VNPay
+            'return_url'  => 'https://your-domain.example/payment/return.php',
+        ],
+    ],
+];
+```
+
+### Cấu hình qua biến môi trường
+
+Thay vì sửa file, bạn có thể dùng biến môi trường:
+
+| Biến | Mô tả |
+|---|---|
+| `DB_HOST` | Host database (mặc định: `127.0.0.1`) |
+| `DB_PORT` | Port database (mặc định: `3306`) |
+| `DB_NAME` | Tên database (mặc định: `RapChieuPhim`) |
+| `DB_USER` | Username database (mặc định: `root`) |
+| `DB_PASS` | Password database |
+| `VNPAY_ENABLED` | `1` để bật VNPay |
+| `VNPAY_ENVIRONMENT` | `sandbox` hoặc `production` |
+| `VNPAY_TMN_CODE` | Mã merchant VNPay |
+| `VNPAY_HASH_SECRET` | Hash secret VNPay |
+| `VNPAY_RETURN_URL` | URL callback sau thanh toán |
+| `ALLOW_DEMO_PAYMENT` | `1` để bật thanh toán demo |
+
+---
+
+## 📁 Cấu trúc thư mục
+
+```
+RapchieuphimPHP2025/
+│
+├── app/                            # Core application
+│   ├── Services/                   # Business logic
+│   │   ├── BookingService.php      # Xử lý đặt vé, giữ ghế
+│   │   ├── CinemaService.php       # Rạp & phòng chiếu
+│   │   ├── PaymentService.php      # Thanh toán VNPay
+│   │   ├── ReportService.php       # Báo cáo doanh thu
+│   │   ├── NewsService.php         # Tin tức & khuyến mãi
+│   │   ├── HistoryService.php      # Lịch sử đặt vé
+│   │   └── HistoryImportService.php# Import hóa đơn cũ
+│   │
+│   ├── Support/                    # Helpers & utilities
+│   │   ├── Auth.php                # Xác thực & phân quyền
+│   │   ├── Database.php            # Kết nối PDO
+│   │   ├── Upload.php              # Upload ảnh poster
+│   │   ├── functions.php           # Helper functions
+│   │   └── icons.php               # SVG icons
+│   │
+│   └── Views/                      # Partial views / components
+│       ├── layouts/                # Header & Footer chung
+│       ├── auth/                   # Form đăng nhập/đăng ký
+│       ├── booking/                # Giao diện đặt vé & chọn ghế
+│       ├── movies/                 # Card phim, suất chiếu
+│       ├── news/                   # Card tin tức
+│       ├── account/                # Lịch sử & vé cá nhân
+│       └── admin/                  # Pagination admin
+│
+├── config/
+│   ├── app.php                     # Cấu hình mặc định (an toàn commit)
+│   ├── local.php                   # Cấu hình local — KHÔNG commit
+│   ├── local.example.php           # Mẫu cấu hình
+│   └── history.example.json        # Mẫu mapping import lịch sử
+│
+├── database/
+│   ├── schema.sql                  # Cấu trúc toàn bộ bảng
+│   └── demo-content.php            # Dữ liệu demo
+│
+├── docs/
+│   ├── DEPLOYMENT.md               # Hướng dẫn deploy Apache/Nginx
+│   ├── PAYMENTS.md                 # Cấu hình & vận hành VNPay
+│   ├── HISTORY.md                  # Import lịch sử hóa đơn cũ
+│   ├── MIGRATION.md                # Nâng cấp từ phiên bản cũ
+│   └── TESTING.md                  # Hướng dẫn chạy tests
+│
+├── public/                         # Web root (DocumentRoot trỏ vào đây)
+│   ├── index.php                   # Trang chủ — danh sách phim
+│   ├── movie.php                   # Chi tiết phim
+│   ├── showtimes.php               # Lịch chiếu
+│   ├── booking.php                 # Chọn ghế & đặt vé
+│   ├── order.php                   # Xác nhận đơn hàng
+│   ├── media.php                   # Phục vụ media (poster, video)
+│   ├── news.php                    # Danh sách tin tức
+│   ├── news-detail.php             # Chi tiết tin tức
+│   │
+│   ├── admin/                      # Khu vực quản trị
+│   │   ├── index.php               # Dashboard
+│   │   ├── movies.php / movie-edit.php
+│   │   ├── cinemas.php / cinema-edit.php
+│   │   ├── showtimes.php / showtime-edit.php
+│   │   ├── orders.php / order.php
+│   │   ├── users.php / user-edit.php
+│   │   ├── payments.php            # Thanh toán VNPay & đối soát
+│   │   ├── revenue.php             # Báo cáo doanh thu
+│   │   ├── news.php / news-edit.php
+│   │   ├── combos.php              # Combo bắp nước
+│   │   ├── history.php             # Lịch sử hóa đơn cũ
+│   │   └── password.php            # Đổi mật khẩu admin
+│   │
+│   ├── auth/
+│   │   ├── login.php / register.php / logout.php
+│   │
+│   ├── account/
+│   │   ├── profile.php             # Hồ sơ cá nhân
+│   │   ├── history.php             # Lịch sử đặt vé
+│   │   └── tickets.php             # Vé điện tử
+│   │
+│   ├── payment/
+│   │   ├── start.php               # Khởi tạo thanh toán VNPay
+│   │   ├── return.php              # ReturnURL sau thanh toán
+│   │   └── ipn.php                 # IPN callback từ VNPay
+│   │
+│   └── api/
+│       ├── seats.php               # Trạng thái ghế real-time
+│       └── order-status.php        # Trạng thái đơn hàng
+│
+├── scripts/                        # Script tiện ích (không public)
+│   ├── install.php                 # Khởi tạo bảng database
+│   ├── create-admin.php            # Tạo tài khoản admin đầu tiên
+│   ├── seed.php                    # Seed phim, rạp, suất chiếu mẫu
+│   ├── seed-content.php            # Seed tin tức & ảnh mẫu
+│   ├── import-history.php          # Import lịch sử hóa đơn cũ
+│   └── migrate-legacy.php          # Chuyển đổi dữ liệu từ hệ thống cũ
+│
+├── storage/
+│   ├── logs/                       # Log lỗi ứng dụng
+│   └── uploads/                    # Ảnh upload (poster phim...)
+│
+└── tests/                          # Test suite
+    ├── run.php                      # Chạy toàn bộ tests
+    ├── payments.php                 # Test luồng thanh toán VNPay
+    ├── concurrency.php              # Test đặt vé đồng thời
+    ├── payment-concurrency.php      # Test thanh toán đồng thời
+    └── ui.cjs                       # UI end-to-end tests
+```
+
+---
+
+## 🖥️ Sử dụng
+
+### Luồng đặt vé (User)
+
+```
+Trang chủ → Chọn phim → Chọn suất chiếu
+  → Chọn ghế (giữ 15 phút) → Chọn combo
+  → Xác nhận đơn → Thanh toán VNPay
+  → Nhận vé điện tử
+```
+
+### Luồng quản trị (Admin)
+
+```
+Đăng nhập Admin → Dashboard
+  → Thêm phim / rạp / suất chiếu
+  → Theo dõi đơn hàng
+  → Xác nhận thanh toán tại quầy
+  → Đối soát VNPay → Báo cáo doanh thu
+```
+
+---
+
+## 💳 Thanh toán VNPay
+
+Xem hướng dẫn đầy đủ tại [`docs/PAYMENTS.md`](docs/PAYMENTS.md)
+
+### Cấu hình nhanh (Sandbox)
+
+1. Đăng ký merchant tại [sandbox.vnpayment.vn/devreg](https://sandbox.vnpayment.vn/devreg/)
+2. Cập nhật `config/local.php`:
+
+```php
+'payments' => [
+    'vnpay' => [
+        'enabled'     => true,
+        'environment' => 'sandbox',
+        'tmn_code'    => 'ABC12345',       // Mã merchant từ VNPay
+        'hash_secret' => 'YOUR_SECRET',    // Khóa bí mật từ VNPay
+        'return_url'  => 'https://your-domain/payment/return.php',
+    ],
+],
+```
+
+3. Khai báo IPN URL với VNPay: `https://your-domain/payment/ipn.php`
+
+> **Lưu ý:** VNPay cần URL HTTPS truy cập được từ Internet. Localhost không nhận IPN từ VNPay.
+
+### Báo cáo doanh thu
+
+Trang doanh thu hiển thị **thu thực tế** (tại quầy + VNPay production). Có bộ lọc riêng cho:
+- 🏪 Tại quầy
+- 💳 VNPay thực (production)
+- 🧪 Sandbox & demo
+- 📜 Lịch sử cũ đã import
+
+---
+
+## 📥 Import lịch sử cũ
+
+Xem hướng dẫn đầy đủ tại [`docs/HISTORY.md`](docs/HISTORY.md)
+
+### Trình tự nhanh
+
+```bash
+# 1. Sao lưu database trước
+# 2. Chạy install để tạo bảng lịch sử
 php scripts/install.php
-php scripts/seed.php
-php scripts/seed-content.php
-php scripts/create-admin.php admin
-php -S 127.0.0.1:8000 -t public
+
+# 3. Tạo file mapping
+copy config\history.example.json config\history.local.json
+# Sửa các tên bảng/cột cho khớp với DB cũ
+
+# 4. Chạy thử (không ghi dữ liệu)
+php scripts/import-history.php --mapping=config/history.local.json
+
+# 5. Xem báo cáo, đối chiếu rồi nhập thật
+php scripts/import-history.php --mapping=config/history.local.json --apply
 ```
 
-Lệnh tạo admin yêu cầu nhập mật khẩu trong terminal; không có tài khoản hay mật khẩu mặc định. Nếu không cần dữ liệu mẫu, bỏ qua `seed.php` và thêm phim/rạp/lịch chiếu trong quản trị.
+---
 
-Mở `http://127.0.0.1:8000/`; quản trị tại `/admin/login.php`. Đăng ký tài khoản khách hàng trên giao diện. Dữ liệu seed dùng lịch tương đối trong 3 ngày tới; không phải lịch chiếu, thời lượng hay giá thực tế.
-
-**XAMPP trên Windows:** đặt dự án trong `htdocs`, bật MySQL và Apache. Nếu `php` chưa có trong PATH, dùng `C:\xampp\php\php.exe` thay cho `php` trong các lệnh trên. Truy cập `http://localhost/RapchieuphimPHP2025/public/`. Đường dẫn tự nhận diện thư mục con; có thể đặt `base_path` trong `config/local.php` nếu dùng reverse proxy. Apache cần `AllowOverride All` để đọc `.htaccess`. PHP development server chỉ chạy với `-t public`.
-
-## Cập nhật tin mới & ưu đãi
-
-Nếu đã chạy bản mới trước đây, cập nhật mã nguồn, giữ `config/local.php` và `storage/uploads/`, rồi chạy lại `php scripts/install.php` để thêm bảng `cinema_news`. Lệnh này không xóa các bảng hoặc dữ liệu đang có.
-
-Trong admin, chọn **Tin & ưu đãi → Thêm bài viết**: nhập tiêu đề, mô tả/nội dung, tải ảnh hoặc chọn ảnh có sẵn, rồi chọn **Đăng công khai** và lưu. Bài xuất hiện trên trang chủ và `/news.php`. Có thể lưu bản nháp, hẹn giờ bằng thời gian đăng, đặt thời gian hết hạn hoặc ẩn bài. Bài nháp/ẩn/chưa tới giờ/hết hạn không hiển thị công khai. Nội dung là văn bản thuần, không thực thi HTML.
-
-Để bổ sung các phim/ảnh minh họa còn thiếu từ main cũ mà không ghi đè phim, lịch chiếu hoặc bài đã sửa:
-
-```bat
-"C:\xampp\php\php.exe" scripts\install.php
-"C:\xampp\php\php.exe" scripts\seed-content.php --include-movies
-```
-
-Chạy từ thư mục dự án. Script chỉ thêm mẫu chưa có, không tự tạo suất chiếu; ngày phát hành/thời lượng/giới hạn tuổi là dữ liệu minh họa. Nếu chỉ cần bài mẫu, bỏ `--include-movies`. Không chạy lại `seed.php` trên CSDL có phim/rạp. Khi cài mới, seed có tám phim của trang mẫu main cũ (bốn đang chiếu, bốn sắp chiếu) và ba phim cũ dùng ảnh ngang từ banner: Chainsaw Man, Tee Yod 2, Mưa Đỏ. Phần banner/tag/hot của mẫu được khởi tạo một lần; tùy chọn bạn đã lưu không bị ghi đè.
-
-Trong **Phim → Sửa**, có thể tải trailer MP4/WebM hoặc nhập đường dẫn HTTPS YouTube/youtu.be. Trailer tải lên được ưu tiên; đường dẫn YouTube được chuẩn hóa và mở bằng nút riêng. Phim có trailer mới hiện nút Trailer trên poster/banner; phim sắp chiếu mở thông tin thay vì giả lập đặt vé.
-
-## Banner, tag và các mục phim
-
-Cập nhật mã rồi chạy lại `php scripts/install.php` để thêm hai bảng hiển thị/tag, giữ dữ liệu phim đang có. `php scripts/seed-content.php --include-movies` bổ sung ba phim/banner cũ và tùy chọn hiển thị mẫu còn thiếu.
-
-Trong **Admin → Phim → Sửa**, nhập **Tag** ngăn cách bằng dấu phẩy, chọn **Hiển thị trong mục Phim hot** hoặc **Ưu tiên trên banner trang chủ**, tải **Ảnh banner ngang** rồi lưu. Nên dùng ảnh khoảng 1600 × 760 px; có thể bỏ ảnh banner để dùng lại poster. Tag kết hợp với tìm kiếm/trạng thái và được giữ khi phân trang. Tối đa 8 tag mỗi phim, mỗi tag 32 ký tự.
-
-- **Phim hot:** các phim do admin chọn; tối đa bốn phim trên trang chủ.
-- **Top tháng:** tối đa bốn phim theo số vé (`cinema_order_items.kind='seat'`) của đơn đã thanh toán trong tháng hiện tại, theo giờ Việt Nam và `paid_at`. Chỉ tính tiền quầy và VNPay production đã xác minh, loại demo/sandbox/đơn chưa trả tiền, không nhân theo combo hoặc số lần thanh toán. Chưa có vé thì hiển thị trạng thái chờ, không tự tạo lượt bán.
-- **Phim cũ:** phim còn công khai có ngày kết thúc trước hôm nay; mở thông tin/trailer. Phim bị admin ẩn không xuất hiện ở bất kỳ nhóm nào. Mẫu không tự tạo suất chiếu hay doanh số thật.
-
-Banner chuyển bằng nút, bàn phím hoặc vuốt ngang; không tự chuyển khi khách đang đọc. Animation dùng CSS/JS nội bộ, không tải thêm thư viện. Khi bật `prefers-reduced-motion`, hiệu ứng được tắt; nội dung vẫn đọc được nếu JavaScript chưa chạy.
-
-## Chuyển từ bản cũ
-
-**Sao lưu CSDL và thư mục uploads trước**, chạy thử trên bản sao trước khi dùng dữ liệu thật. `install.php` chỉ tạo các bảng có tiền tố `cinema_`, không xóa bảng cũ.
+## 🧪 Chạy Tests
 
 ```bash
-php scripts/install.php
-php scripts/migrate-legacy.php /duong-dan/toi/uploads-cu
-php scripts/create-admin.php admin
+# Chạy toàn bộ tests
+php tests/run.php
+
+# Test riêng từng phần
+php tests/payments.php
+php tests/concurrency.php
+php tests/payment-concurrency.php
 ```
 
-Không chạy `seed.php` hoặc tạo admin trước bước import. Script nhập khách hàng, admin, phim, rạp, phòng và lịch chiếu từ các tên bảng/cột mà mã nguồn cũ sử dụng. Khóa khách hàng dạng `KH001` được giữ ở `legacy_key`; phim/phòng/lịch giữ ID cũ. MD5 cũ được nâng cấp thành `password_hash` sau lần đăng nhập thành công đầu tiên. Lệnh tạo admin sẽ từ chối ghi đè admin có sẵn; chỉ dùng `--reset` khi chủ động cần đặt lại mật khẩu.
+> Xem hướng dẫn chi tiết tại [`docs/TESTING.md`](docs/TESTING.md)
 
-Repository cũ không có schema SQL đầy đủ. Vì quan hệ `HoaDon`–`Ve` chưa xác định được và báo cáo cũ nối qua khách hàng, **lịch sử được nhập vào kho lưu trữ riêng bằng `scripts/import-history.php`, sau khi đối chiếu mapping**. Các bảng cũ vẫn giữ nguyên để đối chiếu. Sơ đồ ghế được tạo từ tổng `SoGhe`, chưa thể tái tạo vị trí thực nếu không có bảng ghế gốc. Xem [hướng dẫn chuyển dữ liệu](docs/MIGRATION.md) trước khi chuyển hệ thống đang dùng.
+---
 
-## Cấu trúc
+## 🌐 Deploy
 
-| Đường dẫn | Mục đích |
-| --- | --- |
-| `public/` | Điểm vào HTTP; trang khách hàng, quản trị, API ghế, CSS/JS/ảnh |
-| `app/Services/` | Phim/lịch, giữ ghế, đơn vé, VNPay, nhập lịch sử, doanh thu |
-| `app/Support/` | CSDL, đăng nhập, CSRF, upload, helper |
-| `app/Views/` | Layout và thành phần giao diện dùng chung |
-| `config/` | Cấu hình mặc định và mẫu cấu hình riêng |
-| `database/` | Schema mới và ánh xạ ảnh cũ đã loại trùng |
-| `scripts/` | Cài đặt, seed, admin, migrate danh mục và import lịch sử |
-| `storage/uploads/` | Media tải lên; phục vụ qua `public/media.php` |
-| `tests/` | Kiểm thử nghiệp vụ trên CSDL riêng |
-| `docs/` | Chuyển dữ liệu, triển khai, kiểm thử |
+Xem hướng dẫn đầy đủ tại [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 
-Không commit `config/local.php`, `config/history.local.json`, mật khẩu CSDL, dữ liệu upload hoặc bản sao lưu. Các URL cũ như `trangchu.php`, `admin/bophim.php` đã đổi sang cấu trúc trong `public/`; hãy cập nhật bookmark và liên kết ngoài.
+### Apache (Ví dụ)
 
-## Luồng đặt vé
-
-Khách đăng nhập → chọn suất/ghế/combo → tạo đơn chờ → thanh toán tại quầy hoặc VNPay → xác nhận tại quầy/IPN hợp lệ → xem/in vé. Đơn giữ ghế tối đa 15 phút, hoặc đến giờ chiếu. Hủy đơn chờ trả lại ghế; đơn hết hạn không khóa ghế nữa. Ghế hết hạn được dọn khi xử lý đặt vé tiếp theo. Đơn đã trả tiền không được hủy theo luồng này.
-
-Giá lấy từ CSDL, không tin tổng tiền gửi từ trình duyệt. Transaction, khóa suất chiếu và khóa duy nhất `(showtime_id, seat_id)` ngăn đặt trùng ghế. Gửi lại cùng biểu mẫu không tạo thêm đơn. Phim giới hạn tuổi yêu cầu khách cập nhật ngày sinh.
-
-**VNPay đã tích hợp, mặc định tắt đến khi có cấu hình merchant riêng.** Xem [cấu hình VNPay](docs/PAYMENTS.md) và [nhập lịch sử](docs/HISTORY.md). `allow_demo_payment` mặc định tắt; bật bằng `ALLOW_DEMO_PAYMENT=1` hoặc cấu hình riêng để thử luồng. Mọi đơn demo được gắn nhãn và tách khỏi doanh thu tại quầy. Đơn tại quầy chỉ được admin xác nhận. Không dùng demo để xác nhận tiền thật.
-
-## Kiểm thử
-
-Chỉ dùng CSDL riêng có tên kết thúc bằng `_test`; lệnh kiểm thử sẽ xóa dữ liệu `cinema_` trong CSDL đó.
-
-```bash
-DB_NAME=cinema_test php scripts/install.php
-DB_NAME=cinema_test php tests/run.php
-DB_NAME=cinema_test php tests/payments.php
-DB_NAME=cinema_test php tests/payment-concurrency.php
-DB_NAME=cinema_test php tests/history.php
-DB_NAME=cinema_test php tests/news.php
-DB_NAME=cinema_test php tests/catalog.php
-DB_NAME=cinema_test php tests/concurrency.php
-DB_NAME=cinema_migration_test php scripts/install.php
-DB_NAME=cinema_migration_test php tests/migration.php
+```apache
+<VirtualHost *:80>
+    ServerName cinema.local
+    DocumentRoot /var/www/cinema/public
+    <Directory /var/www/cinema/public>
+        AllowOverride All
+        Require all granted
+        Options -Indexes
+    </Directory>
+</VirtualHost>
 ```
 
-PowerShell: đặt `$env:DB_NAME='cinema_test'` rồi chạy các lệnh PHP. Kiểm thử đồng thời dùng hai process PHP độc lập; cần cho phép `proc_open` trong PHP CLI. Xem [kiểm thử](docs/TESTING.md) và [triển khai](docs/DEPLOYMENT.md).
+### Checklist trước khi deploy
 
-Workflow GitHub Actions chạy PHP lint, nghiệp vụ/thanh toán/lịch sử, đặt ghế và IPN đồng thời, migration giả lập, luồng HTTP, giao diện desktop/mobile và kiểm tra khả năng truy cập. Node.js chỉ phục vụ kiểm thử giao diện, không cần để chạy website. Không sử dụng CSDL thật hoặc mật khẩu triển khai để chạy CI.
+- [ ] Đặt `allow_demo_payment => false` trong `config/local.php`
+- [ ] Không commit `config/local.php`
+- [ ] Thư mục `storage/uploads/` có quyền ghi (không dùng `777`)
+- [ ] Bật HTTPS — cookie phiên cần thuộc tính `Secure`
+- [ ] Cấu hình PHP: `display_errors=Off`, `log_errors=On`, `upload_max_filesize=25M`
+- [ ] Múi giờ MySQL đặt `+07:00` để khớp với PHP `Asia/Ho_Chi_Minh`
+- [ ] Tài khoản DB chỉ cần `SELECT/INSERT/UPDATE/DELETE` sau khi cài đặt
+- [ ] Chạy lại `php scripts/install.php` sau mỗi lần nâng cấp
+
+---
+
+## 🔐 Bảo mật
+
+- `config/local.php` chứa thông tin nhạy cảm → **KHÔNG commit lên Git** (đã có trong `.gitignore`)
+- Các thư mục `app/`, `config/`, `database/`, `scripts/`, `storage/` được bảo vệ bằng `.htaccess` — **không public trực tiếp**
+- Sử dụng **PDO + prepared statements** để chống SQL Injection
+- Mật khẩu mã hoá bằng `password_hash()` / `password_verify()`
+- Chữ ký VNPay dùng **HMAC-SHA512**, xác minh ở server
+- Không tin tưởng `Host` header từ client khi tạo callback URL
+
+---
+
+## 📝 Changelog
+
+Xem lịch sử thay đổi tại [`docs/HISTORY.md`](docs/HISTORY.md)
+
+---
+
+## 👨‍💻 Tác giả
+
+**NguyenKhoa206** — [GitHub](https://github.com/NguyenKhoa206)
+
+---
+
+## 📄 License
+
+MIT License — Free to use & modify.
