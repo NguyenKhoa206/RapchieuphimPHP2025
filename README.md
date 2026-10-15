@@ -110,10 +110,11 @@ http://localhost/RapchieuphimPHP2025/scripts/install.php
 
 > Script này tạo các bảng cần thiết, an toàn khi chạy lại — không xóa dữ liệu cũ.
 
-### Bước 5: Tạo tài khoản Admin
+### Bước 5:  tài khoản Admin
 
 ```
-http://localhost/RapchieuphimPHP2025/scripts/create-admin.php
+admin
+123123123
 ```
 
 ### Bước 6: (Tuỳ chọn) Thêm dữ liệu mẫu
